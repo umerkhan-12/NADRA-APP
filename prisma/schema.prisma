@@ -1,0 +1,139 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  COMPLETED
+  CLOSED
+}
+
+enum Priority {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+// cnic is optional beacuse if citizen dosent hacve cnic they can still create ticket with email or phone
+model User {
+  id        Int       @id @default(autoincrement())
+  name      String
+  cnic      String?    @unique
+  email     String?    @unique
+  phone     String?
+  role      UserRole   @default(USER)
+  createdAt DateTime   @default(now())
+
+  tickets   Ticket[]
+  payments  Payment[]
+  chatbotLogs ChatbotLog[]
+}
+
+model Agent {
+  id         Int       @id @default(autoincrement())
+  name       String
+  username   String    @unique
+  password   String
+  maxTickets Int       @default(5)
+  createdAt  DateTime  @default(now())
+
+  tickets    Ticket[]
+}
+
+model Service {
+  id          Int       @id @default(autoincrement())
+  name        String
+  description String?
+  fee         Float     @default(0)
+  defaultPriority Priority @default(MEDIUM)
+
+  tickets     Ticket[]
+}
+
+model Ticket {
+  id          Int          @id @default(autoincrement())
+  userId      Int
+  agentId     Int?
+  serviceId   Int
+  priority    Priority
+  status      TicketStatus @default(OPEN)
+  createdAt   DateTime     @default(now())
+  closedAt    DateTime?
+
+  user        User         @relation(fields: [userId], references: [id])
+  agent       Agent?       @relation(fields: [agentId], references: [id])
+  service     Service      @relation(fields: [serviceId], references: [id])
+  logs        TicketLog[]
+  documents   UploadedDocument[]
+  payment     Payment?
+  delivery    Delivery?
+}
+
+model TicketLog {
+  id        Int       @id @default(autoincrement())
+  ticketId  Int
+  message   String
+  time      DateTime  @default(now())
+
+  ticket    Ticket    @relation(fields: [ticketId], references: [id])
+}
+
+model UploadedDocument {
+  id        Int       @id @default(autoincrement())
+  ticketId  Int
+  filePath  String
+  fileType  String
+  uploadedAt DateTime @default(now())
+
+  ticket    Ticket    @relation(fields: [ticketId], references: [id])
+}
+
+model Payment {
+  id         Int             @id @default(autoincrement())
+  ticketId   Int    @unique
+  userId     Int
+  amount     Float
+  status     PaymentStatus @default(PENDING)
+  createdAt  DateTime @default(now())
+
+  ticket     Ticket  @relation(fields: [ticketId], references: [id])
+  user       User    @relation(fields: [userId], references: [id])
+}
+
+model Delivery {
+  id          Int       @id @default(autoincrement())
+  ticketId    Int       @unique
+  address     String
+  city        String
+  phone       String
+  status      String   @default("PENDING")
+  createdAt   DateTime @default(now())
+
+  ticket      Ticket    @relation(fields: [ticketId], references: [id])
+}
+
+model ChatbotLog {
+  id          Int       @id @default(autoincrement())
+  userId      Int?      // Nullable: guest user might chat
+  question    String
+  response    String
+  createdAt   DateTime  @default(now())
+  isHelpful   Boolean?  // Optional field for user feedback
+
+  user        User?            @relation(fields: [userId], references: [id])
+}
