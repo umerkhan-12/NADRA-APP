@@ -6,6 +6,18 @@ export async function POST(req) {
   try {
     const { email } = await req.json();
 
+     // Check if user already exists
+    const existingUser = await prisma.user.findFirst({
+      where: { email },
+    });
+
+    if (existingUser) {
+      return NextResponse.json({
+        success: false,
+        error: "This email is already registered. Please login.",
+      });
+    }
+
     const code = Math.floor(100000 + Math.random() * 900000).toString();
 
     await prisma.oTP.create({

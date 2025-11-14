@@ -36,6 +36,7 @@ model User {
   cnic      String?    @unique
   email     String?    @unique
   phone     String?
+  password  String?   
   role      UserRole   @default(USER)
   createdAt DateTime   @default(now())
 

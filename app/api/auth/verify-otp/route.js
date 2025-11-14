@@ -6,7 +6,7 @@ export async function POST(req) {
   try {
     const { name, email, phone, password, otp } = await req.json();
 
-    const check = await prisma.oTP.findFirst({
+    const check = await prisma.OTP.findFirst({
       where: { email, code: otp }
     });
 
@@ -27,7 +27,7 @@ export async function POST(req) {
       },
     });
 
-    await prisma.oTP.deleteMany({ where: { email } });
+    await prisma.OTP.deleteMany({ where: { email } });
 
     return NextResponse.json({ success: true });
   } catch (err) {
