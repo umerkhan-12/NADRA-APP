@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Link from "next/link";
 import {
   Menu,
   X,
@@ -22,6 +23,7 @@ import {
   MapPin,
 } from "lucide-react";
 import Image from "next/image";
+
 
 export default function Home() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -129,10 +131,10 @@ export default function Home() {
           {/* CTA Buttons */}
           <div className="hidden md:flex space-x-4">
             <button className="px-4 py-2 rounded-lg hover:bg-gray-100 text-gray-700">
-              Login
+              <Link href="/login">Login</Link>
             </button>
-            <button className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg">
-              Register
+            <button className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg ">
+              <Link href="/register">Register</Link>
             </button>
           </div>
 
