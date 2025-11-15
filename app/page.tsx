@@ -24,7 +24,6 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 
-
 export default function Home() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -240,7 +239,7 @@ export default function Home() {
           </div>
         </div>
       </section>
-       <section className="py-20 bg-linear-to-r from-green-600 to-green-700">
+      <section className="py-20 bg-linear-to-r from-green-600 to-green-700">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center text-white">
             <h2 className="text-white mb-4 text-3xl font-semibold">
@@ -410,11 +409,11 @@ export default function Home() {
                   <span>State Life Building, Blue Area, Islamabad</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <Phone size={18} className="flex-shrink-0" />
+                  <Phone size={18} className="shrink-0" />
                   <span>+92 51 111 786 100</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <Mail size={18} className="flex-shrink-0" />
+                  <Mail size={18} className="shrink-0" />
                   <span>info@nadra.gov.pk</span>
                 </li>
               </ul>

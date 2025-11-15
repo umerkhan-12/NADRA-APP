@@ -66,10 +66,10 @@ export default function LoginPage() {
       </div>
 
       {/* Login Card */}
-      <div className="relative z-10 w-full max-w-md px-4">
+      <div className="relative z-10 w-full max-w-md px-2">
         <Card className="shadow-2xl border-white/10 bg-white/95 backdrop-blur-md">
           <CardHeader className="space-y-2 text-center">
-            <div className="mx-auto mb-2 w-16 h-16 bg-gradient from-purple-600 to-blue-600 rounded-full flex items-center justify-center">
+            <div className="mx-auto mb-2 w-16 h-16 bg-linear-to-r from-purple-600 to-blue-600 rounded-full flex items-center justify-center">
               <User className="w-8 h-8 text-white" />
             </div>
             <CardTitle className="text-2xl">Welcome Back</CardTitle>
