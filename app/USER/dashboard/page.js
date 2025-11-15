@@ -39,7 +39,7 @@ export default function UserDashboard() {
       .then(res => res.json())
       .then(data => {
         setTickets(data.tickets || []);
-        console.log("Fetched tickets from API:", data);  // <-- add this
+        console.log("Fetched tickets from API:", data);  
       })
       .catch(console.error)
       .finally(() => setTicketsLoading(false));
@@ -100,36 +100,86 @@ export default function UserDashboard() {
 
   if (!userId && !ticketsLoading) return <p>Please log in to view your dashboard.</p>;
 
-  return (
-    <div className="p-6 max-w-6xl mx-auto space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold mb-4">Citizen Dashboard</h1>
-        <button onClick={handleLogout} className="bg-red-600 text-white p-2 rounded hover:bg-red-700">Logout</button>
+
+return (
+  <div className="flex min-h-screen bg-gray-100">
+
+    {/* ---------------------- LEFT SIDEBAR ---------------------- */}
+    <aside className="w-64 bg-white shadow-xl border-r p-6 flex flex-col">
+      <img
+        src="/logo.png"
+        alt="NADRA Logo"
+        className="w-32 mx-auto mb-4"
+      />
+
+      <h2 className="text-xl font-bold text-center text-green-700">NADRA Citizen Portal</h2>
+
+      {/* User Info + Logout Button */}
+      <div className="mt-8 bg-gray-50 p-4 rounded-xl shadow-sm">
+        {/* <p className="font-semibold text-gray-700 text-center">👤 {localStorage.getItem("userName")}</p> */}
+        <p className="text-gray-500 text-center">User ID: {userId}</p>
+        <p className="text-gray-500 text-center capitalize">Role: {localStorage.getItem("role")}</p>
+
+        <button
+          onClick={handleLogout}
+          className="mt-4 w-full bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition"
+        >
+          Logout
+        </button>
+      </div>
+    </aside>
+
+    {/* ---------------------- MAIN CONTENT ---------------------- */}
+    <div className="flex-1 p-8">
+
+      {/* ---------------------- HEADER ---------------------- */}
+      <header className="bg-green-700 text-white p-5 rounded-xl shadow-lg mb-8">
+        <h1 className="text-3xl font-bold tracking-wide">Citizen Dashboard</h1>
+        <p className="text-sm text-green-100 mt-1">Manage your services and tickets easily</p>
+      </header>
+
+      {/* ---------------------- STAT CARDS ---------------------- */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+
+        <div className="bg-white p-5 rounded-2xl shadow flex items-center gap-4 hover:scale-105 transition">
+          <div className="p-4 bg-green-100 rounded-xl">📄</div>
+          <div>
+            <p className="text-gray-500">Total Tickets</p>
+            <p className="text-3xl font-bold">{totalTickets}</p>
+          </div>
+        </div>
+
+        <div className="bg-white p-5 rounded-2xl shadow flex items-center gap-4 hover:scale-105 transition">
+          <div className="p-4 bg-blue-100 rounded-xl">⚙️</div>
+          <div>
+            <p className="text-gray-500">In Progress</p>
+            <p className="text-3xl font-bold text-blue-600">{inProgressTickets}</p>
+          </div>
+        </div>
+
+        <div className="bg-white p-5 rounded-2xl shadow flex items-center gap-4 hover:scale-105 transition">
+          <div className="p-4 bg-green-100 rounded-xl">✔️</div>
+          <div>
+            <p className="text-gray-500">Completed</p>
+            <p className="text-3xl font-bold text-green-600">{completedTickets}</p>
+          </div>
+        </div>
+
+        <div className="bg-white p-5 rounded-2xl shadow flex items-center gap-4 hover:scale-105 transition">
+          <div className="p-4 bg-yellow-100 rounded-xl">⏳</div>
+          <div>
+            <p className="text-gray-500">Pending</p>
+            <p className="text-3xl font-bold text-yellow-600">{pendingTickets}</p>
+          </div>
+        </div>
+
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-xl shadow flex flex-col items-center">
-          <p className="text-gray-500">Total Tickets</p>
-          <p className="text-2xl font-bold">{totalTickets}</p>
-        </div>
-        <div className="bg-white p-4 rounded-xl shadow flex flex-col items-center">
-          <p className="text-gray-500">In Progress</p>
-          <p className="text-2xl font-bold text-blue-600">{inProgressTickets}</p>
-        </div>
-        <div className="bg-white p-4 rounded-xl shadow flex flex-col items-center">
-          <p className="text-gray-500">Completed</p>
-          <p className="text-2xl font-bold text-green-600">{completedTickets}</p>
-        </div>
-        <div className="bg-white p-4 rounded-xl shadow flex flex-col items-center">
-          <p className="text-gray-500">Pending</p>
-          <p className="text-2xl font-bold text-yellow-600">{pendingTickets}</p>
-        </div>
-      </div>
-
-      {/* Ticket Creation Form */}
-      <div className="bg-white p-6 rounded-xl shadow">
+      {/* ---------------------- TICKET CREATION ---------------------- */}
+      <div className="bg-white p-6 rounded-xl shadow mb-8">
         <h2 className="text-xl font-semibold mb-4">Create a New Ticket</h2>
+
+        {/* Your existing form (unchanged) */}
         <div className="space-y-4">
           <div>
             <label className="block font-medium mb-1">Select Service</label>
@@ -142,6 +192,7 @@ export default function UserDashboard() {
               ))}
             </select>
           </div>
+
           <div>
             <label className="block font-medium mb-1">Priority</label>
             <select className="border p-2 w-full rounded" value={priority} onChange={e => setPriority(e.target.value)}>
@@ -150,15 +201,21 @@ export default function UserDashboard() {
               <option value="HIGH">High</option>
             </select>
           </div>
-          <button onClick={handleTicketCreate} disabled={loading} className="bg-blue-600 text-white p-3 w-full rounded hover:bg-blue-700">
+
+          <button
+            onClick={handleTicketCreate}
+            disabled={loading}
+            className="bg-green-700 text-white p-3 w-full rounded hover:bg-green-800 transition"
+          >
             {loading ? "Creating Ticket..." : "Generate Ticket"}
           </button>
         </div>
       </div>
 
-      {/* Tickets List */}
+      {/* ---------------------- TICKET LIST (UPGRADED) ---------------------- */}
       <div className="bg-white p-6 rounded-xl shadow">
         <h2 className="text-xl font-semibold mb-4">My Tickets</h2>
+
         {ticketsLoading ? (
           <p>Loading tickets...</p>
         ) : tickets.length === 0 ? (
@@ -166,21 +223,48 @@ export default function UserDashboard() {
         ) : (
           <div className="space-y-4">
             {tickets.map(t => (
-              <div key={t.id} className="border p-4 rounded-lg flex justify-between items-center">
+              <div
+                key={t.id}
+                className="
+                  border rounded-xl p-5 shadow-sm hover:shadow-md
+                  transition bg-gray-50 flex justify-between items-center
+                "
+                style={{
+                  borderLeft: `6px solid ${
+                    t.status === "COMPLETED"
+                      ? "#16A34A"
+                      : t.status === "IN_PROGRESS"
+                      ? "#2563EB"
+                      : "#EAB308"
+                  }`,
+                }}
+              >
                 <div>
-                  <p className="font-medium">Ticket #{t.id}</p>
-                  <p>Service: {t.serviceName}</p>
-                  <p>Priority: {t.customerPriority}</p>
-                  <p>Created: {new Date(t.createdAt).toLocaleString()}</p>
+                  <p className="text-lg font-semibold text-gray-800">
+                    🎫 Ticket #{t.id}
+                  </p>
+                  <p className="text-gray-600">🛠 Service: {t.serviceName}</p>
+                  <p className="text-gray-600">⚡ Priority: {t.customerPriority}</p>
+                  <p className="text-gray-500 text-sm">
+                    📅 Created: {new Date(t.createdAt).toLocaleString()}
+                  </p>
                 </div>
-                <div className={`px-3 py-1 rounded-full font-medium ${getStatusColor(t.status)}`}>
+
+                <div
+                  className={`px-4 py-2 rounded-full font-medium text-sm ${getStatusColor(
+                    t.status
+                  )}`}
+                >
                   {t.status.replace("_", " ")}
                 </div>
               </div>
             ))}
           </div>
         )}
+
       </div>
+
     </div>
-  );
+  </div>
+);
 }

@@ -32,7 +32,7 @@ export default function LoginPage() {
     const res = await fetch("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password, role }),
+      body: JSON.stringify({ email, password, role,name }),
     });
 
     const data = await res.json();
@@ -45,8 +45,8 @@ export default function LoginPage() {
 
     // ⭐ SAVE USER DATA IN LOCAL STORAGE
     localStorage.setItem("userId", data.userId);
-localStorage.setItem("role", data.role);
-    localStorage.setItem("userName", data.Name);
+    localStorage.setItem("role", data.role);
+    localStorage.setItem("userName", data.name);
 
     alert(`Login successful as ${data.role}`);
 
