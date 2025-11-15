@@ -15,12 +15,15 @@ export async function POST(req) {
       return NextResponse.json({
         success: false,
         error: "This email is already registered. Please login.",
+        // I WANT TO REDIRECT TO LOGIN PAGEafter this shown up do it 
+        // correct it 
+       
       });
     }
 
     const code = Math.floor(100000 + Math.random() * 900000).toString();
 
-    await prisma.oTP.create({
+    await prisma.OTP.create({
       data: { email, code }
     });
 

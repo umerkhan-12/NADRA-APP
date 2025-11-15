@@ -18,19 +18,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Mail, Lock, User } from "lucide-react";
-// import { ImageWithFallback } from "@/components/figma/ImageWithFallback";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("USER"); // FIXED role value
+  const [role, setRole] = useState("USER"); 
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
-    // send login request to API
     const res = await fetch("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -41,13 +39,18 @@ export default function LoginPage() {
     setLoading(false);
 
     if (!res.ok) {
-      alert(data.error);
+      alert(data.error || "Login failed");
       return;
     }
 
+    // ⭐ SAVE USER DATA IN LOCAL STORAGE
+    localStorage.setItem("userId", data.userId);
+localStorage.setItem("role", data.role);
+    localStorage.setItem("userName", data.Name);
+
     alert(`Login successful as ${data.role}`);
 
-    // REDIRECT BASED ON ROLE
+    // ⭐ REDIRECT BASED ON ROLE
     if (data.role === "ADMIN") window.location.href = "/admin/dashboard";
     if (data.role === "AGENT") window.location.href = "/agent/dashboard";
     if (data.role === "USER") window.location.href = "/USER/dashboard";
@@ -80,6 +83,7 @@ export default function LoginPage() {
 
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
+
               {/* Email Field */}
               <div className="space-y-2">
                 <Label htmlFor="email" className="flex items-center gap-2">
@@ -118,7 +122,7 @@ export default function LoginPage() {
                     <SelectValue placeholder="Select your role" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="USER">USER</SelectItem>
+                    <SelectItem value="USER">User</SelectItem>
                     <SelectItem value="AGENT">Agent</SelectItem>
                     <SelectItem value="ADMIN">Admin</SelectItem>
                   </SelectContent>
@@ -133,6 +137,14 @@ export default function LoginPage() {
               >
                 {loading ? "Checking..." : "Sign In"}
               </Button>
+
+              {/* Sign Up Link */}
+              <div className="text-sm text-center">
+                <a href="/register" className="text-blue-600 hover:underline">
+                  Don't have an account? Sign Up
+                </a>
+              </div>
+
             </form>
           </CardContent>
         </Card>

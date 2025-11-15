@@ -69,6 +69,9 @@ export default function RegisterPage() {
       <div className="relative z-10 w-full max-w-md px-2">
         <Card className="shadow-2xl border-white/10 bg-white/95 backdrop-blur-md">
           <CardHeader className="text-center space-y-2">
+             <div className="mx-auto mb-2 w-16 h-16 bg-linear-to-r from-purple-600 to-blue-600 rounded-full flex items-center justify-center">
+              <User className="w-8 h-8 text-white" />
+            </div>
             <CardTitle className="text-2xl">Create Your Account</CardTitle>
             <CardDescription>Register as a Citizen to request NADRA services</CardDescription>
           </CardHeader>

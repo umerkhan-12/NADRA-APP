@@ -68,22 +68,31 @@ model Service {
 }
 
 model Ticket {
-  id          Int          @id @default(autoincrement())
-  userId      Int
-  agentId     Int?
-  serviceId   Int
-  priority    Priority
-  status      TicketStatus @default(OPEN)
-  createdAt   DateTime     @default(now())
-  closedAt    DateTime?
+  id               Int          @id @default(autoincrement())
+  userId           Int
+  agentId          Int?
+  serviceId        Int
 
-  user        User         @relation(fields: [userId], references: [id])
-  agent       Agent?       @relation(fields: [agentId], references: [id])
-  service     Service      @relation(fields: [serviceId], references: [id])
-  logs        TicketLog[]
-  documents   UploadedDocument[]
-  payment     Payment?
-  delivery    Delivery?
+  // PRIORITY SYSTEM
+  servicePriority  Priority     // from Service.defaultPriority
+  customerPriority CustomerPriority @default(NORMAL) // user-selected
+  finalPriority    Int          // servicePriority - boost
+
+  status           TicketStatus @default(OPEN)
+  createdAt        DateTime     @default(now())
+  closedAt         DateTime?
+
+  user             User         @relation(fields: [userId], references: [id])
+  agent            Agent?       @relation(fields: [agentId], references: [id])
+  service          Service      @relation(fields: [serviceId], references: [id])
+  logs             TicketLog[]
+  documents        UploadedDocument[]
+  payment          Payment?
+  delivery         Delivery?
+}
+enum CustomerPriority {
+  NORMAL
+  URGENT
 }
 
 model TicketLog {
