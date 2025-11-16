@@ -21,6 +21,7 @@ export async function GET(req, context) {
       status: t.status,
       customerPriority: t.customerPriority,
       createdAt: t.createdAt,
+      fee: t.service.fee,
     }));
 
     return NextResponse.json({ tickets: formattedTickets });
