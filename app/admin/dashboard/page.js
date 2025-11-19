@@ -234,7 +234,7 @@ export default function AdminDashboard() {
     }
   };
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <div className="min-h-screen bg-linear-to-br from-slate-900 via-purple-900 to-slate-900">
       <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
@@ -258,7 +258,7 @@ export default function AdminDashboard() {
 
         {/* Summary Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="bg-gradient-to-br from-blue-500 to-blue-600 border-none text-white hover:shadow-2xl hover:scale-105 transition-all duration-300">
+          <Card className="bg-linear-to-br from-blue-500 to-blue-600 border-none text-white hover:shadow-2xl hover:scale-105 transition-all duration-300">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-semibold">Total Users</CardTitle>
               <Users className="h-5 w-5 opacity-80" />
@@ -272,7 +272,7 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-purple-500 to-purple-600 border-none text-white hover:shadow-2xl hover:scale-105 transition-all duration-300">
+          <Card className="bg-linear-to-br from-purple-500 to-purple-600 border-none text-white hover:shadow-2xl hover:scale-105 transition-all duration-300">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-semibold">Total Tickets</CardTitle>
               <Ticket className="h-5 w-5 opacity-80" />
@@ -286,7 +286,7 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-green-500 to-green-600 border-none text-white hover:shadow-2xl hover:scale-105 transition-all duration-300">
+          <Card className="bg-linear-to-br from-green-500 to-green-600 border-none text-white hover:shadow-2xl hover:scale-105 transition-all duration-300">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-semibold">Total Agents</CardTitle>
               <UserCheck className="h-5 w-5 opacity-80" />
@@ -299,7 +299,7 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-orange-500 to-orange-600 border-none text-white hover:shadow-2xl hover:scale-105 transition-all duration-300">
+          <Card className="bg-linear-to-br from-orange-500 to-orange-600 border-none text-white hover:shadow-2xl hover:scale-105 transition-all duration-300">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-semibold">Pending Payments</CardTitle>
               <CreditCard className="h-5 w-5 opacity-80" />
@@ -317,7 +317,7 @@ export default function AdminDashboard() {
 
         {/* Create Agent Form */}
         <Card className="bg-white/95 backdrop-blur border-purple-200 shadow-xl hover:shadow-2xl transition-shadow">
-          <CardHeader className="bg-gradient-to-r from-purple-50 to-blue-50">
+          <CardHeader className="bg-linear-to-br from-purple-50 to-blue-50">
             <CardTitle className="flex items-center gap-2 text-purple-900">
               <Plus className="h-5 w-5" />
               Create New Agent

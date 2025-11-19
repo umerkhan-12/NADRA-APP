@@ -141,9 +141,9 @@ export default function AgentDashboard() {
   if (!session) return <p>Redirecting to login...</p>;
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-cyan-900 via-blue-900 to-slate-900">
+    <div className="flex min-h-screen bg-linear-to-br from-cyan-900 via-blue-900 to-slate-900">
       <aside className="w-80 bg-white/95 backdrop-blur shadow-2xl border-r border-cyan-200 flex flex-col h-screen sticky top-0">
-      <div className="p-6 border-b bg-gradient-to-br from-cyan-600 to-blue-700">
+      <div className="p-6 border-b bg-linear-to-br from-cyan-600 to-blue-700">
         <h2 className="text-xl text-center text-white font-semibold tracking-tight">Agent Dashboard</h2>
         <p className="text-xs text-center text-cyan-100 mt-1">Support Portal</p>
       </div>
@@ -152,7 +152,7 @@ export default function AgentDashboard() {
         <Card className="border-2 border-cyan-200 mb-4 shadow-xl">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-center">
-              <div className="h-16 w-16 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white text-2xl shadow-lg">
+              <div className="h-16 w-16 rounded-full bg-linear-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white text-2xl shadow-lg">
                 {session?.user?.name?.charAt(0).toUpperCase() || <User className="h-8 w-8" />}
               </div>
             </div>
@@ -201,7 +201,7 @@ export default function AgentDashboard() {
         </Card>
 
         {/* Quick Stats */}
-        <div className="mt-4 p-4 bg-gradient-to-br from-cyan-50 to-blue-50 rounded-lg border border-cyan-200 shadow-md">
+        <div className="mt-4 p-4 bg-linear-to-br from-cyan-50 to-blue-50 rounded-lg border border-cyan-200 shadow-md">
           <p className="text-xs text-cyan-700 mb-2 font-semibold">Performance Overview</p>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
@@ -226,7 +226,7 @@ export default function AgentDashboard() {
       <div className="flex-1 p-6 lg:p-8 overflow-auto">
         {/* Header */}
         <div className="mb-8">
-          <Card className="bg-gradient-to-r from-cyan-600 to-blue-700 text-white border-0 shadow-2xl">
+          <Card className="bg-linear-to-br from-cyan-600 to-blue-700 text-white border-0 shadow-2xl">
             <CardHeader>
               <CardTitle className="text-3xl font-bold">Agent Portal</CardTitle>
               <CardDescription className="text-cyan-100">
@@ -238,7 +238,7 @@ export default function AgentDashboard() {
 
         {/* STAT CARDS */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <Card className="bg-gradient-to-br from-slate-500 to-slate-600 border-none text-white hover:shadow-2xl hover:scale-105 transition-all duration-300">
+          <Card className="bg-linear-to-br from-slate-500 to-slate-600 border-none text-white hover:shadow-2xl hover:scale-105 transition-all duration-300">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-semibold">Total Tickets</CardTitle>
               <FileText className="h-5 w-5 opacity-80" />
@@ -249,7 +249,7 @@ export default function AgentDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-blue-500 to-blue-600 border-none text-white hover:shadow-2xl hover:scale-105 transition-all duration-300">
+          <Card className="bg-linear-to-br from-blue-500 to-blue-600 border-none text-white hover:shadow-2xl hover:scale-105 transition-all duration-300">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-semibold">In Progress</CardTitle>
               <Settings className="h-5 w-5 opacity-80" />
@@ -260,7 +260,7 @@ export default function AgentDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-green-500 to-green-600 border-none text-white hover:shadow-2xl hover:scale-105 transition-all duration-300">
+          <Card className="bg-linear-to-br from-green-500 to-green-600 border-none text-white hover:shadow-2xl hover:scale-105 transition-all duration-300">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-semibold">Completed</CardTitle>
               <CheckCircle2 className="h-5 w-5 opacity-80" />
@@ -271,7 +271,7 @@ export default function AgentDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-yellow-500 to-yellow-600 border-none text-white hover:shadow-2xl hover:scale-105 transition-all duration-300">
+          <Card className="bg-linear-to-br from-yellow-500 to-yellow-600 border-none text-white hover:shadow-2xl hover:scale-105 transition-all duration-300">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-semibold">Pending</CardTitle>
               <Clock className="h-5 w-5 opacity-80" />
@@ -285,7 +285,7 @@ export default function AgentDashboard() {
 
         {/* TICKET LIST */}
         <Card className="bg-white/95 backdrop-blur shadow-2xl border-cyan-200">
-          <CardHeader className="bg-gradient-to-r from-cyan-50 to-blue-50 border-b border-cyan-100">
+          <CardHeader className="bg-linear-to-br from-cyan-50 to-blue-50 border-b border-cyan-100">
             <CardTitle className="flex items-center gap-2 text-cyan-900">
               <Ticket className="h-5 w-5" /> Assigned Tickets
             </CardTitle>
