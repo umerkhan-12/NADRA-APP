@@ -453,7 +453,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 👨‍💻 Developer
 
-**Anas (umerkhan-12)**  
+**Umer (umerkhan-12)**  
 GitHub: [@umerkhan-12](https://github.com/umerkhan-12)
 
 ---
