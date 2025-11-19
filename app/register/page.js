@@ -1,6 +1,12 @@
 "use client";
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -26,6 +32,11 @@ export default function RegisterPage() {
     });
 
     const data = await res.json();
+    if (data.redirect) {
+      alert(data.error);
+      window.location.href = data.redirect;
+      return;
+    }
 
     if (data.success) {
       setOtpSent(true);
@@ -69,11 +80,13 @@ export default function RegisterPage() {
       <div className="relative z-10 w-full max-w-md px-2">
         <Card className="shadow-2xl border-white/10 bg-white/95 backdrop-blur-md">
           <CardHeader className="text-center space-y-2">
-             <div className="mx-auto mb-2 w-16 h-16 bg-linear-to-r from-purple-600 to-blue-600 rounded-full flex items-center justify-center">
+            <div className="mx-auto mb-2 w-16 h-16 bg-linear-to-r from-purple-600 to-blue-600 rounded-full flex items-center justify-center">
               <User className="w-8 h-8 text-white" />
             </div>
             <CardTitle className="text-2xl">Create Your Account</CardTitle>
-            <CardDescription>Register as a Citizen to request NADRA services</CardDescription>
+            <CardDescription>
+              Register as a Citizen to request NADRA services
+            </CardDescription>
           </CardHeader>
 
           <CardContent>
@@ -100,7 +113,9 @@ export default function RegisterPage() {
                     type="email"
                     placeholder="name@example.com"
                     required
-                    onChange={(e) => setForm({ ...form, email: e.target.value })}
+                    onChange={(e) =>
+                      setForm({ ...form, email: e.target.value })
+                    }
                   />
                 </div>
 
@@ -112,7 +127,9 @@ export default function RegisterPage() {
                   <Input
                     placeholder="03XXXXXXXXX"
                     required
-                    onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                    onChange={(e) =>
+                      setForm({ ...form, phone: e.target.value })
+                    }
                   />
                 </div>
 
@@ -125,7 +142,9 @@ export default function RegisterPage() {
                     type="password"
                     placeholder="Your password"
                     required
-                    onChange={(e) => setForm({ ...form, password: e.target.value })}
+                    onChange={(e) =>
+                      setForm({ ...form, password: e.target.value })
+                    }
                   />
                 </div>
 

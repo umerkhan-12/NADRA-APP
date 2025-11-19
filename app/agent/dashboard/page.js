@@ -66,6 +66,30 @@ export default function AgentDashboard() {
     .finally(() => setTicketsLoading(false));
 }, [userId]);
 
+// Auto-refresh tickets every 5 seconds WITHOUT UI flicker
+useEffect(() => {
+  if (!userId) return;
+
+  const interval = setInterval(async () => {
+    try {
+      const res = await fetch(`/api/agent/${userId}/tickets`);
+      const data = await res.json();
+
+      setTickets(prev => {
+        // If tickets changed, update them; otherwise keep same state
+        if (JSON.stringify(prev) !== JSON.stringify(data.tickets)) {
+          return data.tickets;
+        }
+        return prev;
+      });
+
+    } catch (err) {
+      console.error("Auto-refresh error:", err);
+    }
+  }, 5000); // refresh every 5 sec
+
+  return () => clearInterval(interval);
+}, [userId]);
 
   const handleLogout = () => {
     localStorage.removeItem("userId");
@@ -97,7 +121,7 @@ export default function AgentDashboard() {
 
   const totalTickets = tickets.length;
   const completedTickets = tickets.filter(t => t.status === "COMPLETED").length;
-  const pendingTickets = tickets.filter(t => t.status === "PENDING").length;
+  const pendingTickets = tickets.filter(t => t.status === "OPEN").length;
   const inProgressTickets = tickets.filter(t => t.status === "IN_PROGRESS").length;
 
   const getStatusColor = (status) => {
@@ -269,3 +293,4 @@ export default function AgentDashboard() {
     </div>
   );
 }
+

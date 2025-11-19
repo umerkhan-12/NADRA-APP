@@ -212,3 +212,6 @@ DATABASE_URL="mysql://root:password@localhost:3306/nadradb"
 NEXTAUTH_SECRET="your_nextauth_secret_here"
 EMAIL_USER="your_email@example.com"
 EMAIL_PASS="your_email_password"
+
+
+

@@ -106,7 +106,7 @@ export default function UserDashboard() {
 
   const totalTickets = tickets.length;
   const completedTickets = tickets.filter(t => t.status === "COMPLETED").length;
-  const pendingTickets = tickets.filter(t => t.status === "PENDING").length;
+  const pendingTickets = tickets.filter(t => t.status === "OPEN").length;
   const inProgressTickets = tickets.filter(t => t.status === "IN_PROGRESS").length;
 
   const handleLogout = () => {

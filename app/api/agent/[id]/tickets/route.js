@@ -12,7 +12,7 @@ export async function GET(req, context) {
 
   try {
     const tickets = await prisma.ticket.findMany({
-      where: { agentId: agentId }, // make sure your Prisma field is `agentId`
+      where: { agentId: agentId }, 
       include: {
         user: true,
         service: true,
