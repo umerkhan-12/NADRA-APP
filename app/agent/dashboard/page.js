@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useEffect, use } from "react";
+import { useState, useEffect } from "react";
+import { useSession, signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,39 +11,36 @@ import { Separator } from "@/components/ui/separator";
 import { User, Ticket, LogOut, FileText, Clock, CheckCircle2, Settings, AlertCircle, Zap } from "lucide-react";
 
 export default function AgentDashboard() {
-  const [userId, setUserId ] = useState(null);
-  const [userName, setUserName] = useState("");
-  const [userRole, setUserRole] = useState("");
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const [tickets, setTickets] = useState([]);
   const [agent, setAgent] = useState({});
   const [ticketsLoading, setTicketsLoading] = useState(true);
 
-  // Load agent ID from localStorage
+  // Check authentication
   useEffect(() => {
-    const storedId = localStorage.getItem("userId");
-    const storedName = localStorage.getItem("userName");
-    const storedRole = localStorage.getItem("role");
+    if (status === "loading") return;
     
-    if (!storedId) {
-      alert("Agent not logged in.");
-      setTicketsLoading(false);
+    if (status === "unauthenticated") {
+      alert("Please login to access this page");
+      router.push("/login");
       return;
     }
-    setUserId(storedId);
-    setUserName(storedName);
-    setUserRole(storedRole);
 
-  }, []);
+    if (session?.user?.role !== "AGENT") {
+      alert("Access denied. Agent only.");
+      router.push("/login");
+    }
+  }, [session, status, router]);
 
   //fetch agent info
-    useEffect(() => {
+  useEffect(() => {
     const fetchAgentInfo = async () => {
-      const agentId = localStorage.getItem("userId");
-      if (!agentId) return;
+      if (status !== "authenticated" || !session?.user?.id) return;
 
       try {
         const res = await fetch("/api/agent/me", {
-          headers: { agentId }, // pass agentId in headers
+          headers: { agentId: session.user.id },
         });
         const data = await res.json();
         if (data.agent) setAgent(data.agent);
@@ -51,34 +50,34 @@ export default function AgentDashboard() {
     };
 
     fetchAgentInfo();
-  }, []);
+  }, [session, status]);
 
   // Fetch assigned tickets
   useEffect(() => {
-  if (!userId) return;
+    if (status !== "authenticated" || !session?.user?.id) return;
 
-  setTicketsLoading(true);
+    setTicketsLoading(true);
 
-  fetch(`/api/agent/${userId}/tickets`)
-    .then(res => res.json())
-    .then(data => setTickets(data.tickets || []))
-    .catch(console.error)
-    .finally(() => setTicketsLoading(false));
-}, [userId]);
+    fetch(`/api/agent/${session.user.id}/tickets`)
+      .then(res => res.json())
+      .then(data => setTickets(data.tickets || []))
+      .catch(console.error)
+      .finally(() => setTicketsLoading(false));
+  }, [session, status]);
 
-// Auto-refresh tickets every 5 seconds WITHOUT UI flicker
-useEffect(() => {
-  if (!userId) return;
+  // Auto-refresh tickets every 5 seconds WITHOUT UI flicker
+  useEffect(() => {
+    if (status !== "authenticated" || !session?.user?.id) return;
 
-  const interval = setInterval(async () => {
-    try {
-      const res = await fetch(`/api/agent/${userId}/tickets`);
-      const data = await res.json();
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/agent/${session.user.id}/tickets`);
+        const data = await res.json();
 
-      setTickets(prev => {
-        // If tickets changed, update them; otherwise keep same state
-        if (JSON.stringify(prev) !== JSON.stringify(data.tickets)) {
-          return data.tickets;
+        setTickets(prev => {
+          // If tickets changed, update them; otherwise keep same state
+          if (JSON.stringify(prev) !== JSON.stringify(data.tickets)) {
+            return data.tickets;
         }
         return prev;
       });
@@ -89,15 +88,11 @@ useEffect(() => {
   }, 5000); // refresh every 5 sec
 
   return () => clearInterval(interval);
-}, [userId]);
+  }, [session, status]);
 
-  const handleLogout = () => {
-    localStorage.removeItem("userId");
-    localStorage.removeItem("userName");
-    localStorage.removeItem("role");
-    // setAgentId(null);
-    setTickets([]);
-    window.location.href = "/login";
+  const handleLogout = async () => {
+    await signOut({ redirect: false });
+    router.push("/login");
   };
 
   const handleTicketUpdate = async (ticketId, newStatus) => {
@@ -142,105 +137,159 @@ useEffect(() => {
     }
   };
 
+  if (status === "loading" || ticketsLoading) return <p>Loading dashboard...</p>;
+  if (!session) return <p>Redirecting to login...</p>;
+
   return (
-    <div className="flex min-h-screen bg-slate-50">
-      <aside className="w-80 bg-white shadow-2xl border-r flex flex-col h-screen sticky top-0">
-      <div className="p-6 border-b bg-green-600">
-        <h2 className="text-xl text-center text-white">Agent Dashboard</h2>
+    <div className="flex min-h-screen bg-gradient-to-br from-cyan-900 via-blue-900 to-slate-900">
+      <aside className="w-80 bg-white/95 backdrop-blur shadow-2xl border-r border-cyan-200 flex flex-col h-screen sticky top-0">
+      <div className="p-6 border-b bg-gradient-to-br from-cyan-600 to-blue-700">
+        <h2 className="text-xl text-center text-white font-semibold tracking-tight">Agent Dashboard</h2>
+        <p className="text-xs text-center text-cyan-100 mt-1">Support Portal</p>
       </div>
 
       <div className="p-6 flex-1 overflow-y-auto">
-        <Card className="border-2 border-green-100 mb-4">
+        <Card className="border-2 border-cyan-200 mb-4 shadow-xl">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-center">
-              <div className="h-16 w-16 rounded-full bg-green-500 flex items-center justify-center text-white text-2xl shadow-lg">
-                {agent.name?.charAt(0).toUpperCase() || <User className="h-8 w-8" />}
+              <div className="h-16 w-16 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white text-2xl shadow-lg">
+                {session?.user?.name?.charAt(0).toUpperCase() || <User className="h-8 w-8" />}
               </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="text-center space-y-1">
-              <p className="text-sm text-muted-foreground">Agent ID</p>
-              <p className="font-mono">{agent.id}</p>
-
-              <p className="text-sm text-muted-foreground">Name</p>
-              <p>{agent.name}</p>
-
-              <p className="text-sm text-muted-foreground">Email</p>
-              <p>{agent.email}</p>
-
-              <p className="text-sm text-muted-foreground">Username</p>
-              <p>{agent.username}</p>
-
-              <p className="text-sm text-muted-foreground">Max Tickets</p>
-              <p>{agent.maxTickets}</p>
-
-              <p className="text-sm text-muted-foreground">Joined</p>
-              <p>{new Date(agent.createdAt).toLocaleDateString()}</p>
+            <div className="text-center">
+              <p className="text-sm text-muted-foreground">Full Name</p>
+              <p className="font-semibold text-lg">{session?.user?.name || agent.name || "N/A"}</p>
             </div>
-
             <Separator />
+            <div className="text-center">
+              <p className="text-sm text-muted-foreground">Agent ID</p>
+              <p className="font-mono text-sm">#{session?.user?.id || agent.id || "N/A"}</p>
+            </div>
+            <Separator />
+            <div className="text-center">
+              <p className="text-sm text-muted-foreground">Email</p>
+              <p className="text-sm">{session?.user?.email || agent.email || "N/A"}</p>
+            </div>
+            <Separator />
+            <div className="text-center">
+              <p className="text-sm text-muted-foreground">Username</p>
+              <p className="text-sm font-medium">{agent.username || "N/A"}</p>
+            </div>
+            <Separator />
+            <div className="text-center">
+              <p className="text-sm text-muted-foreground">Max Tickets Capacity</p>
+              <Badge variant="outline" className="mt-1">
+                <Zap className="h-3 w-3 mr-1" />
+                {agent.maxTickets || 5} Tickets
+              </Badge>
+            </div>
+            <Separator />
+            <div className="text-center">
+              <p className="text-sm text-muted-foreground">Member Since</p>
+              <p className="text-xs">{agent.createdAt ? new Date(agent.createdAt).toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric' 
+              }) : "N/A"}</p>
+            </div>
             <Button onClick={handleLogout} variant="destructive" className="w-full mt-4">
               <LogOut className="mr-2 h-4 w-4" /> Logout
             </Button>
           </CardContent>
         </Card>
+
+        {/* Quick Stats */}
+        <div className="mt-4 p-4 bg-gradient-to-br from-cyan-50 to-blue-50 rounded-lg border border-cyan-200 shadow-md">
+          <p className="text-xs text-cyan-700 mb-2 font-semibold">Performance Overview</p>
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span>Active:</span>
+              <span className="font-semibold text-cyan-600">{inProgressTickets}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Completed:</span>
+              <span className="font-semibold text-green-600">{completedTickets}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Total Handled:</span>
+              <span className="font-semibold">{totalTickets}</span>
+            </div>
+          </div>
+        </div>
       </div>
     </aside>
   
 
       {/* ------------------ MAIN CONTENT ------------------ */}
       <div className="flex-1 p-6 lg:p-8 overflow-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <Card className="bg-gradient-to-r from-cyan-600 to-blue-700 text-white border-0 shadow-2xl">
+            <CardHeader>
+              <CardTitle className="text-3xl font-bold">Agent Portal</CardTitle>
+              <CardDescription className="text-cyan-100">
+                Manage and resolve citizen service requests
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        </div>
+
         {/* STAT CARDS */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <Card className="border-l-4 border-l-slate-500">
-            <CardHeader className="flex justify-between pb-2">
-              <CardTitle className="text-sm">Total Tickets</CardTitle>
-              <FileText className="h-5 w-5 text-slate-500" />
+          <Card className="bg-gradient-to-br from-slate-500 to-slate-600 border-none text-white hover:shadow-2xl hover:scale-105 transition-all duration-300">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-semibold">Total Tickets</CardTitle>
+              <FileText className="h-5 w-5 opacity-80" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl">{totalTickets}</div>
+              <div className="text-3xl font-bold">{totalTickets}</div>
+              <p className="text-xs text-slate-100 mt-1">All assigned</p>
             </CardContent>
           </Card>
 
-          <Card className="border-l-4 border-l-blue-500">
-            <CardHeader className="flex justify-between pb-2">
-              <CardTitle className="text-sm">In Progress</CardTitle>
-              <Settings className="h-5 w-5 text-blue-500" />
+          <Card className="bg-gradient-to-br from-blue-500 to-blue-600 border-none text-white hover:shadow-2xl hover:scale-105 transition-all duration-300">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-semibold">In Progress</CardTitle>
+              <Settings className="h-5 w-5 opacity-80" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl text-blue-600">{inProgressTickets}</div>
+              <div className="text-3xl font-bold">{inProgressTickets}</div>
+              <p className="text-xs text-blue-100 mt-1">Currently working</p>
             </CardContent>
           </Card>
 
-          <Card className="border-l-4 border-l-green-500">
-            <CardHeader className="flex justify-between pb-2">
-              <CardTitle className="text-sm">Completed</CardTitle>
-              <CheckCircle2 className="h-5 w-5 text-green-500" />
+          <Card className="bg-gradient-to-br from-green-500 to-green-600 border-none text-white hover:shadow-2xl hover:scale-105 transition-all duration-300">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-semibold">Completed</CardTitle>
+              <CheckCircle2 className="h-5 w-5 opacity-80" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl text-green-600">{completedTickets}</div>
+              <div className="text-3xl font-bold">{completedTickets}</div>
+              <p className="text-xs text-green-100 mt-1">Successfully resolved</p>
             </CardContent>
           </Card>
 
-          <Card className="border-l-4 border-l-yellow-500">
-            <CardHeader className="flex justify-between pb-2">
-              <CardTitle className="text-sm">Pending</CardTitle>
-              <Clock className="h-5 w-5 text-yellow-500" />
+          <Card className="bg-gradient-to-br from-yellow-500 to-yellow-600 border-none text-white hover:shadow-2xl hover:scale-105 transition-all duration-300">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-semibold">Pending</CardTitle>
+              <Clock className="h-5 w-5 opacity-80" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl text-yellow-600">{pendingTickets}</div>
+              <div className="text-3xl font-bold">{pendingTickets}</div>
+              <p className="text-xs text-yellow-100 mt-1">Awaiting action</p>
             </CardContent>
           </Card>
         </div>
 
         {/* TICKET LIST */}
-        <Card className="shadow-md">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+        <Card className="bg-white/95 backdrop-blur shadow-2xl border-cyan-200">
+          <CardHeader className="bg-gradient-to-r from-cyan-50 to-blue-50 border-b border-cyan-100">
+            <CardTitle className="flex items-center gap-2 text-cyan-900">
               <Ticket className="h-5 w-5" /> Assigned Tickets
             </CardTitle>
-            <CardDescription>Manage tickets assigned to you</CardDescription>
+            <CardDescription className="text-cyan-700">Manage tickets assigned to you</CardDescription>
           </CardHeader>
           <CardContent>
             {ticketsLoading ? (

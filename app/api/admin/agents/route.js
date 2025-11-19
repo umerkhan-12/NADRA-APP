@@ -4,6 +4,10 @@ import { NextResponse } from "next/server";
 export async function GET() {
   try {
     const agents = await prisma.agent.findMany({
+      select : {
+        id: true,
+        name: true,
+      },
       orderBy: { id: "desc" },
     });
 

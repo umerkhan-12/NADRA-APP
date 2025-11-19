@@ -154,6 +154,7 @@
 // }
 "use client";
 import { useState } from "react";
+import { signIn } from "next-auth/react";
 import {
   Card,
   CardContent,
@@ -175,6 +176,7 @@ import { Mail, Lock, User } from "lucide-react";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("USER");
   const [loading, setLoading] = useState(false);
@@ -183,44 +185,58 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
 
-    const res = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password, role }),
-    });
+    try {
+      let result;
+      
+      // Different login flows for USER/ADMIN vs AGENT
+      if (role === "AGENT") {
+        if (!username || !password) {
+          alert("Please enter username and password");
+          setLoading(false);
+          return;
+        }
+        result = await signIn("agent-login", {
+          username,
+          password,
+          redirect: false,
+        });
+      } else {
+        if (!email || !password) {
+          alert("Please enter email and password");
+          setLoading(false);
+          return;
+        }
+        result = await signIn("user-login", {
+          email,
+          password,
+          redirect: false,
+        });
+      }
 
-    const data = await res.json();
-    setLoading(false);
+      setLoading(false);
 
-    if (!res.ok) {
-      alert(data.error || "Login failed");
-      return;
+      if (result?.error) {
+        alert("Login failed: Invalid credentials");
+        return;
+      }
+
+      if (result?.ok) {
+        alert(`Login successful!`);
+        
+        // Redirect based on selected role
+        if (role === "ADMIN") {
+          window.location.href = "/admin/dashboard";
+        } else if (role === "AGENT") {
+          window.location.href = "/agent/dashboard";
+        } else {
+          window.location.href = "/USER/dashboard";
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Something went wrong during login");
+      setLoading(false);
     }
-
-    // ⭐ MULTI-SESSION LOCAL STORAGE
-    // Save each login separately without removing old ones
-    const logs = JSON.parse(localStorage.getItem("loginHistory") || "[]");
-
-    logs.push({
-      userId: data.userId,
-      role: data.role,
-      name: data.name,
-      email: email,
-      loginTime: new Date().toISOString(),
-    });
-
-    localStorage.setItem("loginHistory", JSON.stringify(logs));
-
-    // Current active session
-    localStorage.setItem("userId", data.userId);
-    localStorage.setItem("role", data.role);
-    localStorage.setItem("userName", data.name);
-
-    alert(`Login successful as ${data.role}`);
-
-    if (data.role === "ADMIN") window.location.href = "/admin/dashboard";
-    if (data.role === "AGENT") window.location.href = "/agent/dashboard";
-    if (data.role === "USER") window.location.href = "/USER/dashboard";
   };
 
   return (
@@ -232,14 +248,14 @@ export default function LoginPage() {
           alt="Background"
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-br from-black/70 via-black/50 to-black/70 backdrop-blur-sm"></div>
+        <div className="absolute inset-0 bg-linear-to-br from-black/70 via-black/50 to-black/70 backdrop-blur-sm"></div>
       </div>
 
       {/* Login Card */}
       <div className="relative z-10 w-full max-w-md px-4">
         <Card className="shadow-2xl border-white/10 bg-white/90 backdrop-blur-xl rounded-2xl">
           <CardHeader className="space-y-2 text-center">
-            <div className="mx-auto mb-2 w-20 h-20 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full flex items-center justify-center shadow-lg shadow-purple-500/40">
+            <div className="mx-auto mb-2 w-20 h-20 bg-linear-to-br from-blue-600 to-purple-600 rounded-full flex items-center justify-center shadow-lg shadow-purple-500/40">
               <User className="w-9 h-9 text-white" />
             </div>
             <CardTitle className="text-3xl font-semibold tracking-wide">
@@ -253,21 +269,53 @@ export default function LoginPage() {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-5">
 
-              {/* Email */}
+              {/* Role Selection (moved to top) */}
               <div className="space-y-2">
-                <Label htmlFor="email" className="flex items-center gap-2 text-gray-700">
-                  <Mail className="w-4 h-4" /> Email
-                </Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="yourname@email.com"
-                  className="focus:ring-2 focus:ring-blue-500"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
+                <Label htmlFor="role">Login As</Label>
+                <Select value={role} onValueChange={setRole}>
+                  <SelectTrigger id="role" className="focus:ring-2 focus:ring-blue-500">
+                    <SelectValue placeholder="Select role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="USER">User</SelectItem>
+                    <SelectItem value="AGENT">Agent</SelectItem>
+                    <SelectItem value="ADMIN">Admin</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
+
+              {/* Conditional Fields based on role */}
+              {role === "AGENT" ? (
+                <div className="space-y-2">
+                  <Label htmlFor="username" className="flex items-center gap-2 text-gray-700">
+                    <User className="w-4 h-4" /> Username
+                  </Label>
+                  <Input
+                    id="username"
+                    type="text"
+                    placeholder="Enter username"
+                    className="focus:ring-2 focus:ring-blue-500"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    required
+                  />
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="flex items-center gap-2 text-gray-700">
+                    <Mail className="w-4 h-4" /> Email
+                  </Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="yourname@email.com"
+                    className="focus:ring-2 focus:ring-blue-500"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+              )}
 
               {/* Password */}
               <div className="space-y-2">
@@ -285,27 +333,12 @@ export default function LoginPage() {
                 />
               </div>
 
-              {/* Role Selection */}
-              <div className="space-y-2">
-                <Label htmlFor="role">Login As</Label>
-                <Select value={role} onValueChange={setRole}>
-                  <SelectTrigger id="role" className="focus:ring-2 focus:ring-blue-500">
-                    <SelectValue placeholder="Select role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="USER">User</SelectItem>
-                    <SelectItem value="AGENT">Agent</SelectItem>
-                    <SelectItem value="ADMIN">Admin</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
               {/* Login Button */}
               <Button
                 type="submit"
                 disabled={loading}
                 className="w-full py-3 text-lg font-medium rounded-xl 
-                bg-gradient-to-r from-blue-600 to-purple-600 
+                bg-linear-to-r from-blue-600 to-purple-600 
                 hover:from-blue-700 hover:to-purple-700 
                 transition-all duration-300 shadow-md hover:shadow-xl"
               >
