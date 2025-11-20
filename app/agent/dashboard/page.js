@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { User, Ticket, LogOut, FileText, Clock, CheckCircle2, Settings, AlertCircle, Zap } from "lucide-react";
+import { User, Ticket, LogOut, FileText, Clock, CheckCircle2, Settings, AlertCircle, Zap, Download, File, Truck } from "lucide-react";
 
 export default function AgentDashboard() {
   const { data: session, status } = useSession();
@@ -326,10 +326,59 @@ export default function AgentDashboard() {
                           )}
                         </div>
                       </CardHeader>
-                      <CardContent className="space-y-1 text-sm">
-                        <p>Service: {t.service.name}</p>
-                        <p>Fee: Rs{t.service.fee?.toFixed(2) || 0}</p>
-                        <p>Created: {new Date(t.createdAt).toLocaleString()}</p>
+                      <CardContent className="space-y-3">
+                        <div className="text-sm space-y-1">
+                          <p><strong>Service:</strong> {t.service.name}</p>
+                          <p><strong>Fee:</strong> Rs. {t.service.fee?.toFixed(2) || 0}</p>
+                          <p><strong>User:</strong> {t.user?.name || "N/A"}</p>
+                          <p><strong>Created:</strong> {new Date(t.createdAt).toLocaleString()}</p>
+                        </div>
+
+                        {/* Delivery Information */}
+                        {t.delivery && (
+                          <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Truck className="h-4 w-4 text-blue-600" />
+                              <span className="text-sm font-semibold text-blue-900">Delivery Required</span>
+                              <Badge variant="outline" className="ml-auto text-xs">
+                                {t.delivery.status}
+                              </Badge>
+                            </div>
+                            <div className="text-xs text-gray-700 space-y-1">
+                              <p><strong>Address:</strong> {t.delivery.address}</p>
+                              <p><strong>City:</strong> {t.delivery.city}</p>
+                              <p><strong>Phone:</strong> {t.delivery.phone}</p>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Documents */}
+                        {t.documents && t.documents.length > 0 && (
+                          <div className="p-3 bg-green-50 rounded-lg border border-green-200">
+                            <div className="flex items-center gap-2 mb-2">
+                              <File className="h-4 w-4 text-green-600" />
+                              <span className="text-sm font-semibold text-green-900">
+                                Attached Documents ({t.documents.length})
+                              </span>
+                            </div>
+                            <div className="space-y-2">
+                              {t.documents.map((doc) => (
+                                <div key={doc.id} className="flex items-center justify-between text-xs bg-white p-2 rounded border">
+                                  <span className="truncate flex-1">{doc.filePath.split('/').pop()}</span>
+                                  <a
+                                    href={doc.filePath}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-green-600 hover:text-green-800 ml-2 flex items-center gap-1"
+                                  >
+                                    <Download className="h-4 w-4" />
+                                    View
+                                  </a>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </CardContent>
                     </Card>
                   ))}

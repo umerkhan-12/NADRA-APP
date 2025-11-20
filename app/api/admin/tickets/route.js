@@ -8,6 +8,8 @@ export async function GET() {
         user: true,
         service: true,
         payment: true,
+        documents: true,
+        delivery: true,
       },
       orderBy: { id: "desc" },
     });

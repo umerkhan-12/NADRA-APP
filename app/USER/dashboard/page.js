@@ -24,7 +24,11 @@ import {
   Zap,
   RollerCoaster,
   Activity,
-  TrendingUp
+  TrendingUp,
+  Upload,
+  Truck,
+  Download,
+  File
 } from 'lucide-react';
 
 export default function UserDashboard() {
@@ -36,6 +40,16 @@ export default function UserDashboard() {
   const [loading, setLoading] = useState(false);
   const [tickets, setTickets] = useState([]);
   const [ticketsLoading, setTicketsLoading] = useState(true);
+  
+  // Document upload states
+  const [selectedTicketId, setSelectedTicketId] = useState(null);
+  const [uploadingFile, setUploadingFile] = useState(false);
+  
+  // Delivery states
+  const [deliveryAddress, setDeliveryAddress] = useState("");
+  const [deliveryCity, setDeliveryCity] = useState("");
+  const [deliveryPhone, setDeliveryPhone] = useState("");
+  const [needsDelivery, setNeedsDelivery] = useState(false);
 
   // Check authentication
   useEffect(() => {
@@ -76,6 +90,13 @@ export default function UserDashboard() {
     if (!serviceId) return alert("Please select a service.");
     if (!session?.user?.id) return alert("User session not found.");
 
+    // Validate delivery fields if delivery is needed
+    if (needsDelivery) {
+      if (!deliveryAddress || !deliveryCity || !deliveryPhone) {
+        return alert("Please fill in all delivery details.");
+      }
+    }
+
     setLoading(true);
     try {
       const res = await fetch("/api/tickets/create", {
@@ -89,17 +110,85 @@ export default function UserDashboard() {
       });
 
       const data = await res.json();
-      setLoading(false);
-      if (!data.success) return alert(data.error);
+      
+      if (!data.success) {
+        setLoading(false);
+        return alert(data.error);
+      }
 
+      // If delivery is needed, add delivery details
+      if (needsDelivery) {
+        const deliveryRes = await fetch(`/api/tickets/${data.ticket.id}/delivery`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            address: deliveryAddress,
+            city: deliveryCity,
+            phone: deliveryPhone,
+          }),
+        });
+
+        const deliveryData = await deliveryRes.json();
+        if (!deliveryData.success) {
+          console.error("Delivery creation failed:", deliveryData.error);
+        }
+      }
+
+      setLoading(false);
       alert(`🎉 Ticket Created! Ticket No: ${data.ticket.id}`);
+      
+      // Reset form
       setServiceId("");
       setPriority("NORMAL");
+      setNeedsDelivery(false);
+      setDeliveryAddress("");
+      setDeliveryCity("");
+      setDeliveryPhone("");
       setTickets(prev => [data.ticket, ...prev]);
     } catch (err) {
       setLoading(false);
       console.error(err);
       alert("Something went wrong.");
+    }
+  }
+
+  // Handle document upload
+  async function handleDocumentUpload(ticketId, event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Validate file size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      return alert("File size must be less than 5MB");
+    }
+
+    setUploadingFile(true);
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch(`/api/tickets/${ticketId}/upload-document`, {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+      setUploadingFile(false);
+
+      if (!data.success) {
+        return alert(data.error);
+      }
+
+      alert("✅ Document uploaded successfully!");
+      
+      // Refresh tickets to show uploaded document
+      const ticketsRes = await fetch(`/api/tickets/user/${parseInt(session.user.id, 10)}`);
+      const ticketsData = await ticketsRes.json();
+      setTickets(ticketsData.tickets || []);
+    } catch (err) {
+      setUploadingFile(false);
+      console.error(err);
+      alert("Failed to upload document");
     }
   }
 
@@ -381,6 +470,62 @@ return (
                 </select>
               </div>
 
+              {/* Delivery Option Checkbox */}
+              <div className="md:col-span-2 space-y-4">
+                <div className="flex items-center space-x-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <input
+                    type="checkbox"
+                    id="needsDelivery"
+                    checked={needsDelivery}
+                    onChange={(e) => setNeedsDelivery(e.target.checked)}
+                    className="h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <Label htmlFor="needsDelivery" className="flex items-center gap-2 cursor-pointer">
+                    <Truck className="h-5 w-5 text-blue-600" />
+                    <span className="font-semibold">I need document delivery</span>
+                  </Label>
+                </div>
+
+                {/* Delivery Form (shown when checkbox is checked) */}
+                {needsDelivery && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <div className="md:col-span-2">
+                      <Label htmlFor="deliveryAddress" className="text-sm font-semibold">Delivery Address</Label>
+                      <input
+                        type="text"
+                        id="deliveryAddress"
+                        placeholder="Enter complete address"
+                        value={deliveryAddress}
+                        onChange={(e) => setDeliveryAddress(e.target.value)}
+                        className="flex h-11 w-full rounded-lg border-2 border-input bg-white px-4 py-2 text-sm mt-2"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="deliveryCity" className="text-sm font-semibold">City</Label>
+                      <input
+                        type="text"
+                        id="deliveryCity"
+                        placeholder="City name"
+                        value={deliveryCity}
+                        onChange={(e) => setDeliveryCity(e.target.value)}
+                        className="flex h-11 w-full rounded-lg border-2 border-input bg-white px-4 py-2 text-sm mt-2"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="deliveryPhone" className="text-sm font-semibold">Contact Phone</Label>
+                      <input
+                        type="tel"
+                        id="deliveryPhone"
+                        placeholder="03XX-XXXXXXX"
+                        value={deliveryPhone}
+                        onChange={(e) => setDeliveryPhone(e.target.value)}
+                        className="flex h-11 w-full rounded-lg border-2 border-input bg-white px-4 py-2 text-sm mt-2"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <div className="md:col-span-2">
                 <Button
                   onClick={handleTicketCreate}
@@ -452,7 +597,7 @@ return (
                           </div>
                         </div>
                       </CardHeader>
-                      <CardContent className="space-y-2">
+                      <CardContent className="space-y-3">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                           <div className="flex items-center gap-2">
                             <Settings className="h-4 w-4 text-muted-foreground" />
@@ -462,7 +607,7 @@ return (
                           <div className="flex items-center gap-2">
                             <CreditCard className="h-4 w-4 text-muted-foreground" />
                             <span className="text-muted-foreground">Price:</span>
-                            <span>Rs{t.fee?.toFixed(2) || 0}</span>
+                            <span>Rs. {t.fee?.toFixed(2) || 0}</span>
                           </div>
                           <div className="flex items-center gap-2 md:col-span-2">
                             <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -470,6 +615,77 @@ return (
                             <span>
                               {new Date(t.createdAt).toLocaleString()}
                             </span>
+                          </div>
+                        </div>
+
+                        {/* Delivery Info */}
+                        {t.delivery && (
+                          <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Truck className="h-4 w-4 text-blue-600" />
+                              <span className="text-sm font-semibold text-blue-900">Delivery Details</span>
+                              <Badge variant="outline" className="ml-auto text-xs">
+                                {t.delivery.status}
+                              </Badge>
+                            </div>
+                            <div className="text-xs text-gray-700 space-y-1">
+                              <p><strong>Address:</strong> {t.delivery.address}</p>
+                              <p><strong>City:</strong> {t.delivery.city}</p>
+                              <p><strong>Phone:</strong> {t.delivery.phone}</p>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Documents Section */}
+                        <div className="mt-3">
+                          {t.documents && t.documents.length > 0 && (
+                            <div className="p-3 bg-green-50 rounded-lg border border-green-200">
+                              <div className="flex items-center gap-2 mb-2">
+                                <File className="h-4 w-4 text-green-600" />
+                                <span className="text-sm font-semibold text-green-900">
+                                  Uploaded Documents ({t.documents.length})
+                                </span>
+                              </div>
+                              <div className="space-y-2">
+                                {t.documents.map((doc) => (
+                                  <div key={doc.id} className="flex items-center justify-between text-xs bg-white p-2 rounded border">
+                                    <span className="truncate flex-1">{doc.filePath.split('/').pop()}</span>
+                                    <a
+                                      href={doc.filePath}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-green-600 hover:text-green-800 ml-2"
+                                    >
+                                      <Download className="h-4 w-4" />
+                                    </a>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Upload Document Button */}
+                          <div className="mt-2">
+                            <label
+                              htmlFor={`file-upload-${t.id}`}
+                              className="flex items-center justify-center gap-2 w-full px-4 py-2 bg-white border-2 border-dashed border-gray-300 rounded-lg hover:border-emerald-500 hover:bg-emerald-50 transition-all cursor-pointer"
+                            >
+                              <Upload className="h-4 w-4 text-emerald-600" />
+                              <span className="text-sm text-gray-700">
+                                {uploadingFile ? "Uploading..." : "Upload Document"}
+                              </span>
+                            </label>
+                            <input
+                              id={`file-upload-${t.id}`}
+                              type="file"
+                              className="hidden"
+                              accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                              onChange={(e) => handleDocumentUpload(t.id, e)}
+                              disabled={uploadingFile}
+                            />
+                            <p className="text-xs text-gray-500 mt-1 text-center">
+                              PDF, JPG, PNG, DOC (Max 5MB)
+                            </p>
                           </div>
                         </div>
                       </CardContent>

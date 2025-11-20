@@ -14,8 +14,14 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Nadra System Dashboard",
-  description: "Dashboard for managing NADRA system",
+  title: "NADRA - National Database & Registration Authority",
+  description: "Official NADRA digital services platform for ID cards, passports, document verification, and registration services",
+  keywords: ["NADRA", "National ID", "Pakistan", "Identity Card", "Passport", "Registration"],
+  authors: [{ name: "NADRA" }],
+  icons: {
+    icon: '/icon',
+    apple: '/apple-icon',
+  },
 };
 
 export default function RootLayout({

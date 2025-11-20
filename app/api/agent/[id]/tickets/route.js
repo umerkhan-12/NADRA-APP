@@ -16,6 +16,8 @@ export async function GET(req, context) {
       include: {
         user: true,
         service: true,
+        documents: true,
+        delivery: true,
       },
       orderBy: { createdAt: "desc" },
     });

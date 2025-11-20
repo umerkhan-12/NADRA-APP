@@ -141,8 +141,8 @@ model Delivery {
 model ChatbotLog {
   id          Int       @id @default(autoincrement())
   userId      Int?      // Nullable: guest user might chat
-  question    String
-  response    String
+  question    String    @db.Text
+  response    String    @db.Text
   createdAt   DateTime  @default(now())
   isHelpful   Boolean?  // Optional field for user feedback
 

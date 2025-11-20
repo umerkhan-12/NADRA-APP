@@ -11,7 +11,11 @@ export async function GET(req, context) {
 
     const tickets = await prisma.ticket.findMany({
       where: { userId },
-      include: { service: true },
+      include: { 
+        service: true,
+        documents: true,
+        delivery: true,
+      },
       orderBy: { createdAt: "desc" },
     });
 
@@ -22,6 +26,8 @@ export async function GET(req, context) {
       customerPriority: t.customerPriority,
       createdAt: t.createdAt,
       fee: t.service.fee,
+      documents: t.documents || [],
+      delivery: t.delivery || null,
     }));
 
     return NextResponse.json({ tickets: formattedTickets });

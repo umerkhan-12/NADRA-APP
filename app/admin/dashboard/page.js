@@ -33,6 +33,8 @@ import {
   Plus,
   Activity,
   TrendingUp,
+  Truck,
+  File,
 } from "lucide-react";
 
 export default function AdminDashboard() {
@@ -517,6 +519,8 @@ export default function AdminDashboard() {
                       <TableHead>Service</TableHead>
                       <TableHead>Priority</TableHead>
                       <TableHead>Status</TableHead>
+                      <TableHead>Documents</TableHead>
+                      <TableHead>Delivery</TableHead>
                       <TableHead>Created At</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -537,6 +541,29 @@ export default function AdminDashboard() {
                           <Badge variant={getStatusColor(t.status)}>
                             {t.status}
                           </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {t.documents && t.documents.length > 0 ? (
+                            <Badge variant="outline" className="flex items-center gap-1 w-fit">
+                              <File className="h-3 w-3" />
+                              {t.documents.length} file{t.documents.length > 1 ? 's' : ''}
+                            </Badge>
+                          ) : (
+                            <span className="text-gray-400 text-xs">No files</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {t.delivery ? (
+                            <div className="flex flex-col gap-1">
+                              <Badge variant="outline" className="flex items-center gap-1 w-fit">
+                                <Truck className="h-3 w-3" />
+                                {t.delivery.status}
+                              </Badge>
+                              <span className="text-xs text-gray-500">{t.delivery.city}</span>
+                            </div>
+                          ) : (
+                            <span className="text-gray-400 text-xs">No delivery</span>
+                          )}
                         </TableCell>
                         <TableCell className="text-muted-foreground text-sm">
                           {new Date(t.createdAt).toLocaleString()}
