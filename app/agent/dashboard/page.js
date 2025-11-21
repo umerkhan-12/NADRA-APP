@@ -141,14 +141,14 @@ export default function AgentDashboard() {
   if (!session) return <p>Redirecting to login...</p>;
 
   return (
-    <div className="flex min-h-screen bg-linear-to-br from-cyan-900 via-blue-900 to-slate-900">
-      <aside className="w-80 bg-white/95 backdrop-blur shadow-2xl border-r border-cyan-200 flex flex-col h-screen sticky top-0">
-      <div className="p-6 border-b bg-linear-to-br from-cyan-600 to-blue-700">
-        <h2 className="text-xl text-center text-white font-semibold tracking-tight">Agent Dashboard</h2>
+    <div className="flex flex-col lg:flex-row min-h-screen bg-linear-to-br from-cyan-900 via-blue-900 to-slate-900">
+      <aside className="w-full lg:w-80 bg-white/95 backdrop-blur shadow-2xl border-b lg:border-r border-cyan-200 flex flex-col lg:h-screen lg:sticky lg:top-0">
+      <div className="p-4 lg:p-6 border-b bg-linear-to-br from-cyan-600 to-blue-700">
+        <h2 className="text-lg lg:text-xl text-center text-white font-semibold tracking-tight">Agent Dashboard</h2>
         <p className="text-xs text-center text-cyan-100 mt-1">Support Portal</p>
       </div>
 
-      <div className="p-6 flex-1 overflow-y-auto">
+      <div className="p-4 lg:p-6 flex-1 overflow-y-auto">
         <Card className="border-2 border-cyan-200 mb-4 shadow-xl">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-center">
@@ -223,7 +223,7 @@ export default function AgentDashboard() {
   
 
       {/* ------------------ MAIN CONTENT ------------------ */}
-      <div className="flex-1 p-6 lg:p-8 overflow-auto">
+      <div className="flex-1 p-4 lg:p-6 xl:p-8 overflow-auto">
         {/* Header */}
         <div className="mb-8">
           <Card className="bg-linear-to-br from-cyan-600 to-blue-700 text-white border-0 shadow-2xl">

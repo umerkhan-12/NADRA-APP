@@ -510,20 +510,21 @@ export default function AdminDashboard() {
                 No tickets available.
               </p>
             ) : (
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>ID</TableHead>
-                      <TableHead>User</TableHead>
-                      <TableHead>Service</TableHead>
-                      <TableHead>Priority</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Documents</TableHead>
-                      <TableHead>Delivery</TableHead>
-                      <TableHead>Created At</TableHead>
-                    </TableRow>
-                  </TableHeader>
+              <div className="overflow-x-auto">
+                <div className="rounded-md border min-w-[800px]">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>ID</TableHead>
+                        <TableHead>User</TableHead>
+                        <TableHead>Service</TableHead>
+                        <TableHead>Priority</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Documents</TableHead>
+                        <TableHead>Delivery</TableHead>
+                        <TableHead>Created At</TableHead>
+                      </TableRow>
+                    </TableHeader>
                   <TableBody>
                     {tickets.map((t) => (
                       <TableRow key={t.id}>
@@ -572,6 +573,7 @@ export default function AdminDashboard() {
                     ))}
                   </TableBody>
                 </Table>
+              </div>
               </div>
             )}
           </CardContent>
