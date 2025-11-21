@@ -1,49 +1,63 @@
 const mysql = require('mysql2/promise');
 
 async function updateOTPTable() {
+  console.log('Connecting to Railway MySQL...');
+  console.log('Host: yamanote.proxy.rlwy.net:30592');
+  
   const connection = await mysql.createConnection({
     host: 'yamanote.proxy.rlwy.net',
     port: 30592,
     user: 'root',
     password: 'SbsptmUQbMKrMFfewcjMKmXCPNBiWeEh',
-    database: 'railway'
+    database: 'railway',
+    connectTimeout: 120000,
+    enableKeepAlive: true,
+    keepAliveInitialDelay: 0
   });
 
-  console.log('Connected to Railway MySQL...');
+  console.log('✓ Connected to Railway MySQL!\n');
 
   try {
-    // Run each ALTER TABLE command
-    await connection.query('ALTER TABLE `OTP` MODIFY COLUMN `email` VARCHAR(191) NULL');
-    console.log('✓ Made email nullable');
+    // Check current OTP table structure
+    console.log('Checking OTP table structure...');
+    const [columns] = await connection.query('SHOW COLUMNS FROM `OTP`');
+    console.log('Current columns:', columns.map(c => `${c.Field} (${c.Type}, Null: ${c.Null})`).join('\n'));
+    
+    console.log('\nUpdating table...\n');
 
-    await connection.query('ALTER TABLE `OTP` MODIFY COLUMN `code` VARCHAR(191) NULL');
-    console.log('✓ Made code nullable');
+    // Make email nullable
+    try {
+      await connection.query('ALTER TABLE `OTP` MODIFY COLUMN `email` VARCHAR(191) NULL');
+      console.log('✓ Made email nullable');
+    } catch (e) {
+      console.log('⚠️  Email column:', e.message);
+    }
 
-    await connection.query('ALTER TABLE `OTP` ADD COLUMN `phoneNumber` VARCHAR(191) NULL');
-    console.log('✓ Added phoneNumber column');
-
-    await connection.query('ALTER TABLE `OTP` ADD COLUMN `otp` VARCHAR(191) NULL');
-    console.log('✓ Added otp column');
-
-    await connection.query('ALTER TABLE `OTP` ADD COLUMN `expiresAt` DATETIME(3) NULL');
-    console.log('✓ Added expiresAt column');
-
-    await connection.query('ALTER TABLE `OTP` ADD COLUMN `verified` BOOLEAN NOT NULL DEFAULT false');
-    console.log('✓ Added verified column');
-
-    await connection.query('ALTER TABLE `OTP` ADD COLUMN `metadata` TEXT NULL');
-    console.log('✓ Added metadata column');
+    // Make code nullable
+    try {
+      await connection.query('ALTER TABLE `OTP` MODIFY COLUMN `code` VARCHAR(191) NULL');
+      console.log('✓ Made code nullable');
+    } catch (e) {
+      console.log('⚠️  Code column:', e.message);
+    }
 
     console.log('\n✅ OTP table updated successfully!');
+    
+    // Verify changes
+    console.log('\nVerifying changes...');
+    const [newColumns] = await connection.query('SHOW COLUMNS FROM `OTP`');
+    console.log('Updated columns:', newColumns.map(c => `${c.Field} (${c.Type}, Null: ${c.Null})`).join('\n'));
+    
   } catch (error) {
-    if (error.code === 'ER_DUP_FIELDNAME') {
-      console.log('⚠️  Column already exists, skipping...');
-    } else {
-      console.error('❌ Error:', error.message);
-    }
+    console.error('❌ Error:', error.message);
+    console.error('Full error:', error);
   } finally {
     await connection.end();
+    console.log('\n✓ Connection closed');
   }
 }
 
-updateOTPTable().catch(console.error);
+updateOTPTable().catch(err => {
+  console.error('Failed to connect:', err.message);
+  console.error('Make sure Railway MySQL is running and accessible');
+});

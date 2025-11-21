@@ -46,7 +46,7 @@ export async function POST(req) {
     // Parse user data from metadata
     let userData;
     try {
-      userData = JSON.parse(otpRecord.metadata);
+      userData = JSON.parse(otpRecord.metaData);
     } catch (e) {
       return NextResponse.json(
         { error: "Invalid registration data" },

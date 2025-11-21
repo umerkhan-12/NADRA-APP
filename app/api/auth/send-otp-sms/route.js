@@ -63,12 +63,12 @@ export async function POST(req) {
     // Store OTP in database
     await prisma.oTP.create({
       data: {
-        phone: phone,
+        phoneNumber: phone,
         code: otp,
         expiresAt,
         verified: false,
         // Store user data temporarily for registration after verification
-        metadata: JSON.stringify({ name, email, password, cnic }),
+        metaData: JSON.stringify({ name, email, password, cnic }),
       },
     });
 
