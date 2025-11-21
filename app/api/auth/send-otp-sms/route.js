@@ -9,10 +9,10 @@ function generateOTP() {
 
 export async function POST(req) {
   try {
-    const { phoneNumber, name, email, password, cnic } = await req.json();
+    const { phone, name, email, password, cnic } = await req.json();
 
     // Validate required fields
-    if (!phoneNumber || !name || !email || !password || !cnic) {
+    if (!phone || !name || !email || !password || !cnic) {
       return NextResponse.json(
         { error: "All fields are required" },
         { status: 400 }
@@ -21,7 +21,7 @@ export async function POST(req) {
 
     // Validate phone number format (Pakistani format: +92XXXXXXXXXX)
     const phoneRegex = /^\+92[0-9]{10}$/;
-    if (!phoneRegex.test(phoneNumber)) {
+    if (!phoneRegex.test(phone)) {
       return NextResponse.json(
         { error: "Invalid phone number format. Use +92XXXXXXXXXX" },
         { status: 400 }
@@ -31,7 +31,7 @@ export async function POST(req) {
     // Check if user already exists
     const existingUser = await prisma.user.findFirst({
       where: {
-        OR: [{ email }, { cnic }, { phoneNumber }],
+        OR: [{ email }, { cnic }, { phone }],
       },
     });
 
@@ -48,7 +48,7 @@ export async function POST(req) {
           { status: 400 }
         );
       }
-      if (existingUser.phoneNumber === phoneNumber) {
+      if (existingUser.phone === phone) {
         return NextResponse.json(
           { error: "Phone number already registered" },
           { status: 400 }
@@ -63,7 +63,7 @@ export async function POST(req) {
     // Store OTP in database
     await prisma.oTP.create({
       data: {
-        phoneNumber,
+        phoneNumber: phone,
         otp,
         expiresAt,
         verified: false,
@@ -91,7 +91,7 @@ export async function POST(req) {
       await client.messages.create({
         body: `Your NADRA verification code is: ${otp}. Valid for 10 minutes.`,
         from: twilioPhoneNumber,
-        to: phoneNumber,
+        to: phone,
       });
 
       return NextResponse.json({
@@ -103,7 +103,7 @@ export async function POST(req) {
       
       // Delete the OTP since we couldn't send it
       await prisma.oTP.deleteMany({
-        where: { phoneNumber, otp },
+        where: { phoneNumber: phone, otp },
       });
 
       return NextResponse.json(

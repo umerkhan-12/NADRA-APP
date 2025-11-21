@@ -17,7 +17,7 @@ export default function RegisterPage() {
   const [form, setForm] = useState({
     name: "",
     email: "",
-    phoneNumber: "",
+    phone: "",
     password: "",
     cnic: "",
   });
@@ -58,7 +58,7 @@ export default function RegisterPage() {
     const res = await fetch("/api/auth/verify-otp-sms", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ phoneNumber: form.phoneNumber, otp }),
+      body: JSON.stringify({ phone: form.phone, otp }),
     });
 
     const data = await res.json();
@@ -172,9 +172,9 @@ export default function RegisterPage() {
                       placeholder="+923001234567"
                       className="bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:ring-2 focus:ring-white/50 h-10 rounded-xl backdrop-blur-sm"
                       required
-                      value={form.phoneNumber}
+                      value={form.phone}
                       onChange={(e) =>
-                        setForm({ ...form, phoneNumber: e.target.value })
+                        setForm({ ...form, phone: e.target.value })
                       }
                     />
                     <p className="text-white/60 text-xs">Format: +92XXXXXXXXXX</p>
@@ -256,7 +256,7 @@ export default function RegisterPage() {
                       <div>
                         <p className="text-white font-semibold text-sm">OTP Sent!</p>
                         <p className="text-white/80 text-xs mt-1">
-                          We've sent a 6-digit code to <span className="font-semibold">{form.phoneNumber}</span>
+                          We've sent a 6-digit code to <span className="font-semibold">{form.phone}</span>
                         </p>
                       </div>
                     </div>

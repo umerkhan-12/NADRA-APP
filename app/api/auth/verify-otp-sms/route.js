@@ -4,9 +4,9 @@ import bcrypt from "bcryptjs";
 
 export async function POST(req) {
   try {
-    const { phoneNumber, otp } = await req.json();
+    const { phone, otp } = await req.json();
 
-    if (!phoneNumber || !otp) {
+    if (!phone || !otp) {
       return NextResponse.json(
         { error: "Phone number and OTP are required" },
         { status: 400 }
@@ -16,7 +16,7 @@ export async function POST(req) {
     // Find the OTP record
     const otpRecord = await prisma.oTP.findFirst({
       where: {
-        phoneNumber,
+        phoneNumber: phone,
         otp,
         verified: false,
       },
@@ -62,7 +62,7 @@ export async function POST(req) {
       data: {
         name: userData.name,
         email: userData.email,
-        phoneNumber,
+        phone: phone,
         password: hashedPassword,
         cnic: userData.cnic,
         role: "USER",
@@ -78,7 +78,7 @@ export async function POST(req) {
     // Delete old OTPs for this phone number
     await prisma.oTP.deleteMany({
       where: {
-        phoneNumber,
+        phoneNumber: phone,
         id: { not: otpRecord.id },
       },
     });
@@ -90,7 +90,7 @@ export async function POST(req) {
         id: user.id,
         name: user.name,
         email: user.email,
-        phoneNumber: user.phoneNumber,
+        phone: user.phone,
         role: user.role,
       },
     });

@@ -31,15 +31,14 @@ enum UserRole {
 }
 // cnic is optional beacuse if citizen dosent hacve cnic they can still create ticket with email or phone
 model User {
-  id          Int       @id @default(autoincrement())
-  name        String
-  cnic        String?   @unique
-  email       String?   @unique
-  phoneNumber String?   @unique
-  phone       String?
-  password    String?   
-  role        UserRole  @default(USER)
-  createdAt   DateTime  @default(now())
+  id        Int       @id @default(autoincrement())
+  name      String
+  cnic      String?   @unique
+  email     String?   @unique
+  phone     String?
+  password  String?   
+  role      UserRole  @default(USER)
+  createdAt DateTime  @default(now())
 
   tickets   Ticket[]
   payments  Payment[]
