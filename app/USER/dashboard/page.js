@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import DashboardChatbot from '@/components/DashboardChatbot';
 import { 
   User, 
   Ticket, 
@@ -40,6 +41,7 @@ export default function UserDashboard() {
   const [loading, setLoading] = useState(false);
   const [tickets, setTickets] = useState([]);
   const [ticketsLoading, setTicketsLoading] = useState(true);
+  const [requiredDocuments, setRequiredDocuments] = useState([]);
   
   // Document upload states
   const [selectedTicketId, setSelectedTicketId] = useState(null);
@@ -70,6 +72,23 @@ export default function UserDashboard() {
       .then(data => setServices(data.services || []))
       .catch(console.error);
   }, []);
+
+  // Fetch required documents when service is selected
+  useEffect(() => {
+    if (!serviceId) {
+      setRequiredDocuments([]);
+      return;
+    }
+
+    fetch(`/api/services/${serviceId}/documents`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          setRequiredDocuments(data.documents || []);
+        }
+      })
+      .catch(console.error);
+  }, [serviceId]);
 
   // Fetch tickets
   useEffect(() => {
@@ -137,6 +156,19 @@ export default function UserDashboard() {
       setLoading(false);
       alert(`🎉 Ticket Created! Ticket No: ${data.ticket.id}`);
       
+      // Format the new ticket to match the expected structure
+      const formattedTicket = {
+        id: data.ticket.id,
+        serviceName: data.ticket.service?.name || "Unknown",
+        status: data.ticket.status,
+        customerPriority: data.ticket.customerPriority,
+        createdAt: data.ticket.createdAt,
+        fee: data.ticket.service?.fee || 0,
+        documents: data.ticket.documents || [],
+        delivery: data.ticket.delivery || null,
+        requiredDocuments: data.ticket.service?.requiredDocuments || [],
+      };
+      
       // Reset form
       setServiceId("");
       setPriority("NORMAL");
@@ -144,7 +176,10 @@ export default function UserDashboard() {
       setDeliveryAddress("");
       setDeliveryCity("");
       setDeliveryPhone("");
-      setTickets(prev => [data.ticket, ...prev]);
+      setRequiredDocuments([]);
+      
+      // Add the formatted ticket to the list
+      setTickets(prev => [formattedTicket, ...prev]);
     } catch (err) {
       setLoading(false);
       console.error(err);
@@ -245,6 +280,9 @@ export default function UserDashboard() {
   };
 return (
     <div className="flex min-h-screen bg-linear-to-br from-emerald-50 via-teal-50 to-green-50">
+      
+      {/* Dashboard Chatbot */}
+      <DashboardChatbot userId={session?.user?.id} userName={session?.user?.name} />
       
       {/* ---------------------- LEFT SIDEBAR ---------------------- */}
       <aside className="w-80 bg-white shadow-2xl border-r flex flex-col h-screen sticky top-0">
@@ -470,6 +508,60 @@ return (
                 </select>
               </div>
 
+              {/* Required Documents Display */}
+              {requiredDocuments.length > 0 && (
+                <div className="md:col-span-2 p-4 bg-amber-50 rounded-lg border-2 border-amber-200">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="h-8 w-8 rounded-full bg-amber-100 flex items-center justify-center">
+                      <FileText className="h-4 w-4 text-amber-600" />
+                    </div>
+                    <h3 className="font-semibold text-amber-900">Required Documents for This Service</h3>
+                  </div>
+                  <p className="text-sm text-amber-800 mb-3">
+                    📋 Please prepare these documents. You'll be able to upload them after creating the ticket.
+                  </p>
+                  <div className="space-y-2">
+                    {requiredDocuments.map((doc) => (
+                      <div
+                        key={doc.id}
+                        className="flex items-start gap-3 p-3 bg-white rounded-lg border border-amber-200"
+                      >
+                        <div className="mt-1">
+                          {doc.isMandatory ? (
+                            <AlertCircle className="h-5 w-5 text-red-500" />
+                          ) : (
+                            <CheckCircle2 className="h-5 w-5 text-blue-500" />
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <p className="font-semibold text-sm text-gray-900">
+                              {doc.documentName}
+                            </p>
+                            {doc.isMandatory ? (
+                              <Badge variant="destructive" className="text-xs">Required</Badge>
+                            ) : (
+                              <Badge variant="secondary" className="text-xs">Optional</Badge>
+                            )}
+                          </div>
+                          {doc.description && (
+                            <p className="text-xs text-gray-600 mt-1">{doc.description}</p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-3 p-3 bg-blue-50 rounded border border-blue-200">
+                    <div className="flex items-start gap-2">
+                      <AlertCircle className="h-4 w-4 text-blue-600 mt-0.5 shrink-0" />
+                      <p className="text-xs text-blue-800">
+                        <strong>Note:</strong> After creating the ticket, you can upload these documents from the ticket card below. Accepted formats: PDF, JPG, PNG, DOC (Max 5MB each)
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Delivery Option Checkbox */}
               <div className="md:col-span-2 space-y-4">
                 <div className="flex items-center space-x-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
@@ -638,6 +730,48 @@ return (
 
                         {/* Documents Section */}
                         <div className="mt-3">
+                          {/* Required Documents List */}
+                          {t.requiredDocuments && t.requiredDocuments.length > 0 && (
+                            <div className="p-3 bg-amber-50 rounded-lg border border-amber-200 mb-3">
+                              <div className="flex items-center gap-2 mb-2">
+                                <FileText className="h-4 w-4 text-amber-600" />
+                                <span className="text-sm font-semibold text-amber-900">
+                                  Required Documents ({t.requiredDocuments.length})
+                                </span>
+                              </div>
+                              <div className="space-y-2">
+                                {t.requiredDocuments.map((reqDoc) => (
+                                  <div
+                                    key={reqDoc.id}
+                                    className="flex items-start gap-2 text-xs bg-white p-2 rounded border border-amber-100"
+                                  >
+                                    <div className="mt-0.5">
+                                      {reqDoc.isMandatory ? (
+                                        <AlertCircle className="h-4 w-4 text-red-500" />
+                                      ) : (
+                                        <CheckCircle2 className="h-4 w-4 text-blue-500" />
+                                      )}
+                                    </div>
+                                    <div className="flex-1">
+                                      <div className="flex items-center gap-1 flex-wrap">
+                                        <span className="font-semibold text-gray-900">{reqDoc.documentName}</span>
+                                        {reqDoc.isMandatory ? (
+                                          <Badge variant="destructive" className="text-[10px] px-1 py-0">Required</Badge>
+                                        ) : (
+                                          <Badge variant="secondary" className="text-[10px] px-1 py-0">Optional</Badge>
+                                        )}
+                                      </div>
+                                      {reqDoc.description && (
+                                        <p className="text-gray-600 mt-0.5">{reqDoc.description}</p>
+                                      )}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Uploaded Documents */}
                           {t.documents && t.documents.length > 0 && (
                             <div className="p-3 bg-green-50 rounded-lg border border-green-200">
                               <div className="flex items-center gap-2 mb-2">

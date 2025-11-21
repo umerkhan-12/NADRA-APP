@@ -222,36 +222,165 @@ def get_ai_response(message, language="en"):
         print(f"Hugging Face API Error: {e}")
         return None
 
-def get_rule_based_response(message, language="en"):
+def get_rule_based_response(message, language="en", isDashboard=False):
     """Fallback rule-based chatbot response"""
-    message_lower = message.lower()
     
-    # Check for tracking request
-    tracking_keywords = ['track', 'status', 'application', 'ticket', 'ٹریک', 'حیثیت', 'درخواست']
-    if any(word in message_lower for word in tracking_keywords):
-        # Extract ticket ID if present
-        import re
-        ticket_match = re.search(r'#?(\d+)', message)
-        cnic_match = re.search(r'\b(\d{5}-\d{7}-\d{1})\b', message)
-        email_match = re.search(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', message)
+    # Extract original message (before the context)
+    original_message = message.split("User's Recent Tickets:")[0].strip()
+    message_lower = original_message.lower()
+    
+    # Debug logging
+    print(f"\n=== DEBUG ===")
+    print(f"Original Message: {original_message}")
+    print(f"Message Lower: {message_lower}")
+    print(f"isDashboard: {isDashboard}")
+    has_tickets = "User's Recent Tickets:" in message
+    print(f"Has tickets context: {has_tickets}")
+    print(f"=============\n")
+    
+    # Dashboard-specific intelligent responses
+    if isDashboard:
+        # Extract ticket data from context if available
+        ticket_data = ""
         
-        if ticket_match:
-            tickets = get_ticket_status(ticket_id=int(ticket_match.group(1)))
-            if tickets:
-                return format_ticket_response(tickets, language)
-        elif cnic_match:
-            tickets = get_ticket_status(cnic=cnic_match.group(1))
-            if tickets:
-                return format_ticket_response(tickets, language)
-        elif email_match:
-            tickets = get_ticket_status(email=email_match.group(0))
-            if tickets:
-                return format_ticket_response(tickets, language)
+        if has_tickets:
+            ticket_section = message.split("User's Recent Tickets:")[1].strip()
+            if ticket_section:
+                # Parse ticket information
+                ticket_lines = [line.strip() for line in ticket_section.split('\n') if line.strip()]
+                ticket_count = len(ticket_lines)
+                
+                # Analyze tickets for status
+                in_progress_tickets = [t for t in ticket_lines if 'IN_PROGRESS' in t]
+                completed_tickets = [t for t in ticket_lines if 'COMPLETED' in t]
+                open_tickets = [t for t in ticket_lines if 'OPEN' in t]
+                pending_payments = [t for t in ticket_lines if 'Payment: PENDING' in t]
+                
+                # How to upload documents (CHECK THIS FIRST - most specific)
+                if any(word in message_lower for word in ['upload', 'document', 'file', 'attach', 'send document', 'add document', 'اپ لوڈ', 'دستاویز']):
+                    print(f"✓ Matched: UPLOAD keywords")
+                    return "📤 **How to Upload Documents:**\n\n1️⃣ Go to 'My Tickets' section on this page\n2️⃣ Find your ticket card\n3️⃣ Look for the 'Upload Document' button at the bottom\n4️⃣ Click it and select your file\n5️⃣ Supported: PDF, JPG, PNG, DOC (Max 5MB)\n\n✅ **Required Documents:**\n• CNIC copy (front & back)\n• Photos (passport size)\n• Birth certificate\n• Previous documents (if renewal)\n\n💡 Upload documents as soon as possible to speed up processing!"
+                
+                # Agent / assigned
+                elif any(word in message_lower for word in ['agent', 'assigned', 'who is', 'who handling', 'officer', 'ایجنٹ', 'افسر']):
+                    print(f"✓ Matched: AGENT keywords")
+                    agent_tickets = [t for t in ticket_lines if 'Agent:' in t]
+                    # Only show non-completed tickets without agents (exclude completed ones with deleted agents)
+                    no_agent_tickets = [t for t in ticket_lines if 'Agent:' not in t and 'COMPLETED' not in t]
+                    
+                    response = ""
+                    if agent_tickets:
+                        response += "👤 **Assigned Agents:**\n\n"
+                        for ticket in agent_tickets:
+                            response += f"• {ticket}\n"
+                        response += "\n✅ These tickets are being handled by our agents.\n"
+                    
+                    if no_agent_tickets:
+                        if response:
+                            response += "\n"
+                        response += "⏳ **Waiting for Assignment:**\n\n"
+                        for ticket in no_agent_tickets:
+                            response += f"• {ticket}\n"
+                        response += "\n⏱️ These will be assigned to an agent soon."
+                    
+                    if not agent_tickets and not no_agent_tickets:
+                        response = "✅ All your tickets have been processed.\n\nCompleted tickets don't require agent assignment."
+                    
+                    return response
+                
+                # Show my tickets / application status
+                elif any(word in message_lower for word in ['show', 'my ticket', 'my application', 'list', 'all ticket', 'میری درخواست', 'دکھائیں']):
+                    response = "📋 **Your Applications:**\n\n"
+                    for i, ticket in enumerate(ticket_lines, 1):
+                        response += f"{i}. {ticket}\n"
+                    response += f"\n📊 **Summary:** {ticket_count} total applications"
+                    if in_progress_tickets:
+                        response += f"\n🔄 {len(in_progress_tickets)} in progress"
+                    if completed_tickets:
+                        response += f"\n✅ {len(completed_tickets)} completed"
+                    if pending_payments:
+                        response += f"\n💰 {len(pending_payments)} pending payment"
+                    return response
+                
+                # Latest / recent status
+                elif any(word in message_lower for word in ['latest', 'recent', 'last', 'newest', 'تازہ ترین', 'حالیہ']):
+                    latest = ticket_lines[0] if ticket_lines else "No tickets found"
+                    return f"🎫 **Your Latest Application:**\n\n{latest}\n\n💡 This is your most recent request."
+                
+                # Payment status
+                elif any(word in message_lower for word in ['payment', 'pay', 'fee', 'paid', 'ادائیگی', 'فیس']):
+                    if pending_payments:
+                        response = "💳 **Payment Status:**\n\n"
+                        for ticket in pending_payments:
+                            response += f"⚠️ {ticket}\n"
+                        response += "\n📌 Please complete payment to proceed with processing."
+                    else:
+                        response = "✅ **All Payments Completed!**\n\nYou have no pending payments."
+                    return response
+                
+                # In progress / processing
+                elif any(word in message_lower for word in ['progress', 'processing', 'working on', 'جاری', 'عمل']):
+                    if in_progress_tickets:
+                        response = "🔄 **Applications Being Processed:**\n\n"
+                        for ticket in in_progress_tickets:
+                            response += f"• {ticket}\n"
+                        response += "\n⏱️ Your documents are being processed by our team."
+                    else:
+                        response = "📭 No applications are currently in progress.\n\n"
+                        if open_tickets:
+                            response += "🔔 You have pending applications waiting for assignment."
+                        elif completed_tickets:
+                            response += "✅ Your recent applications are completed!"
+                    return response
+                
+                # Completed / finished
+                elif any(word in message_lower for word in ['completed', 'finished', 'done', 'ready', 'مکمل', 'ختم']):
+                    if completed_tickets:
+                        response = "✅ **Completed Applications:**\n\n"
+                        for ticket in completed_tickets:
+                            response += f"• {ticket}\n"
+                        response += "\n🎉 These services are ready for collection/delivery!"
+                    else:
+                        response = "⏳ No completed applications yet.\n\nYour requests are still being processed."
+                    return response
+                
+                # Delivery status
+                elif any(word in message_lower for word in ['delivery', 'deliver', 'ship', 'ڈیلیوری', 'ترسیل']):
+                    delivery_tickets = [t for t in ticket_lines if 'Delivery:' in t]
+                    if delivery_tickets:
+                        response = "🚚 **Delivery Status:**\n\n"
+                        for ticket in delivery_tickets:
+                            response += f"• {ticket}\n"
+                        response += "\n📦 Check 'My Tickets' section for delivery address details."
+                    else:
+                        response = "📮 No delivery information available.\n\nYour applications might not require delivery or are not at that stage yet."
+                    return response
+                
+                # General tracking response
+                else:
+                    response = "📋 **Your Applications Overview:**\n\n"
+                    for i, ticket in enumerate(ticket_lines[:3], 1):  # Show top 3
+                        response += f"{i}. {ticket}\n"
+                    if ticket_count > 3:
+                        response += f"\n...and {ticket_count - 3} more\n"
+                    response += "\n💡 **Ask me about:**\n• Latest status\n• Payment details\n• Document upload\n• Delivery status"
+                    return response
         
-        # If no specific identifier found, provide instructions
+        # No tickets yet
+        else:
+            if any(word in message_lower for word in ['ticket', 'application', 'status', 'track', 'show']):
+                return "📭 **No Applications Yet**\n\nYou haven't created any service requests.\n\n✨ **Get Started:**\n1. Use 'Create New Service Request' form above\n2. Select a service (ID Card, Passport, etc.)\n3. Choose priority (Normal/Urgent)\n4. Submit your request\n\n🎯 I'll help you track it once created!"
+            
+            # Help / what can you do
+            if any(word in message_lower for word in ['help', 'what can', 'how', 'مدد', 'کیسے']):
+                return "🤖 **I can help you with:**\n\n📊 Check application status\n💳 View payment details\n📤 Guide document upload\n🚚 Track delivery\n👤 Check agent assignment\n⏱️ Processing updates\n\n💬 **Try asking:**\n• 'Show my tickets'\n• 'What's my latest status?'\n• 'Any pending payments?'\n• 'How to upload documents?'"
+    
+    # Public chatbot - redirect to login
+    tracking_keywords = ['track', 'status', 'application', 'ticket', 'my application', 'my ticket']
+    if any(word in message_lower for word in tracking_keywords) and not isDashboard:
         if language == "ur":
-            return NADRA_KNOWLEDGE["tracking"][language] + "\n\nمثال: 'ٹکٹ #123 ٹریک کریں' یا 'میری CNIC 12345-1234567-1 کے لیے درخواستیں دکھائیں'"
-        return NADRA_KNOWLEDGE["tracking"][language] + "\n\nExample: 'Track ticket #123' or 'Show applications for CNIC 12345-1234567-1'"
+            return "🔐 اپنی درخواستوں کو ٹریک کرنے کے لیے:\n\n1️⃣ اپنے اکاؤنٹ میں لاگ ان کریں\n2️⃣ اپنے ڈیش بورڈ پر جائیں\n3️⃣ 'My Tickets' سیکشن میں تمام درخواستیں دیکھیں\n\n🔒 سیکیورٹی کی وجہ سے، ذاتی درخواست کی تفصیلات صرف لاگ ان کے بعد دستیاب ہیں۔"
+        return "🔐 To track your applications:\n\n1️⃣ Login to your account\n2️⃣ Go to your dashboard\n3️⃣ View all tickets in 'My Tickets' section\n\n🔒 For security reasons, personal application details are only available after login."
     
     # Greeting detection
     greetings = ['hello', 'hi', 'hey', 'salam', 'السلام علیکم', 'assalam']
@@ -286,7 +415,7 @@ def get_rule_based_response(message, language="en"):
     else:
         return "I'm sorry, I didn't understand that. Could you rephrase?\n\nYou can ask about:\n- ID Card application\n- Passport services\n- Fees and charges\n- Required documents\n- Application tracking"
 
-def get_response(message, language="en"):
+def get_response(message, language="en", isDashboard=False):
     """Main response function - tries AI first, falls back to rules"""
     # Try AI response first
     ai_response = get_ai_response(message, language)
@@ -294,7 +423,7 @@ def get_response(message, language="en"):
         return ai_response
     
     # Fallback to rule-based
-    return get_rule_based_response(message, language)
+    return get_rule_based_response(message, language, isDashboard)
 
 @app.route('/health', methods=['GET'])
 def health():
@@ -309,12 +438,13 @@ def chat():
         message = data.get('message', '')
         language = data.get('language', 'en')
         user_id = data.get('userId', None)
+        isDashboard = data.get('isDashboard', False)
         
         if not message:
             return jsonify({"error": "Message is required"}), 400
         
         # Get chatbot response
-        response = get_response(message, language)
+        response = get_response(message, language, isDashboard)
         
         return jsonify({
             "success": True,
@@ -341,4 +471,4 @@ def services():
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=True)
+    app.run(host='0.0.0.0', port=port, debug=False)

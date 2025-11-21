@@ -7,7 +7,7 @@ export async function POST(request) {
   let language = "en"; // Default language
   
   try {
-    const { message, language: reqLanguage = "en", userId } = await request.json();
+    const { message, language: reqLanguage = "en", userId, isDashboard = false } = await request.json();
     language = reqLanguage; // Update language from request
 
     if (!message) {
@@ -17,13 +17,49 @@ export async function POST(request) {
       );
     }
 
+    // If from dashboard and user is logged in, fetch their tickets for context
+    let userContext = "";
+    if (isDashboard && userId) {
+      try {
+        const tickets = await prisma.ticket.findMany({
+          where: { userId: parseInt(userId) },
+          include: {
+            service: true,
+            agent: true,
+            payment: true,
+            delivery: true
+          },
+          orderBy: { createdAt: 'desc' },
+          take: 5
+        });
+
+        if (tickets.length > 0) {
+          userContext = `\n\nUser's Recent Tickets:\n`;
+          tickets.forEach(t => {
+            userContext += `- Ticket #${t.id}: ${t.service.name} (${t.status})`;
+            if (t.agent) userContext += ` | Agent: ${t.agent.name}`;
+            if (t.payment) userContext += ` | Payment: ${t.payment.status}`;
+            if (t.delivery) userContext += ` | Delivery: ${t.delivery.status}`;
+            userContext += `\n`;
+          });
+        }
+      } catch (err) {
+        console.error("Error fetching user tickets:", err);
+      }
+    }
+
     // Call Flask chatbot API
     const response = await fetch(`${FLASK_API_URL}/chat`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ message, language, userId }),
+      body: JSON.stringify({ 
+        message: message + userContext, 
+        language, 
+        userId,
+        isDashboard 
+      }),
     });
 
     if (!response.ok) {
@@ -36,7 +72,7 @@ export async function POST(request) {
     if (userId || data.response) {
       await prisma.chatbotLog.create({
         data: {
-          userId: userId || null,
+          userId: userId ? parseInt(userId, 10) : null,
           question: message,
           response: data.response,
         },

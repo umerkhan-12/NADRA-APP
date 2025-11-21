@@ -4,6 +4,7 @@ generator client {
 
 datasource db {
   provider = "mysql"
+  url      = env("DATABASE_URL")
 }
 
 enum TicketStatus {
@@ -64,6 +65,18 @@ model Service {
   defaultPriority Priority @default(MEDIUM)
 
   tickets     Ticket[]
+  requiredDocuments RequiredDocument[]
+}
+
+model RequiredDocument {
+  id          Int      @id @default(autoincrement())
+  serviceId   Int
+  documentName String
+  description String?
+  isMandatory Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  service     Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
 }
 
 model Ticket {
