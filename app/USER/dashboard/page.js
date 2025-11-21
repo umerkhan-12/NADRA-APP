@@ -279,21 +279,21 @@ export default function UserDashboard() {
     );
   };
 return (
-    <div className="flex min-h-screen bg-linear-to-br from-emerald-50 via-teal-50 to-green-50">
+    <div className="flex flex-col lg:flex-row min-h-screen bg-linear-to-br from-emerald-50 via-teal-50 to-green-50">
       
       {/* Dashboard Chatbot */}
       <DashboardChatbot userId={session?.user?.id} userName={session?.user?.name} />
       
       {/* ---------------------- LEFT SIDEBAR ---------------------- */}
-      <aside className="w-80 bg-white shadow-2xl border-r flex flex-col h-screen sticky top-0">
+      <aside className="w-full lg:w-80 bg-white shadow-2xl border-b lg:border-r flex flex-col lg:h-screen lg:sticky lg:top-0">
         {/* Logo Section */}
-        <div className="p-6 border-b bg-linear-to-br from-emerald-600 via-green-600 to-teal-600">
+        <div className="p-4 lg:p-6 border-b bg-linear-to-br from-emerald-600 via-green-600 to-teal-600">
           <div className="flex items-center justify-center mb-3">
-            <div className="h-16 w-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border-2 border-white/30">
-              <User className="h-8 w-8 text-white" />
+            <div className="h-12 w-12 lg:h-16 lg:w-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border-2 border-white/30">
+              <User className="h-6 w-6 lg:h-8 lg:w-8 text-white" />
             </div>
           </div>
-          <h2 className="text-xl tracking-tight text-center text-white font-semibold">
+          <h2 className="text-lg lg:text-xl tracking-tight text-center text-white font-semibold">
             NADRA Citizen Portal
           </h2>
           <p className="text-xs text-center text-green-100 mt-1">National Database & Registration Authority</p>
@@ -380,14 +380,14 @@ return (
       </aside>
 
       {/* ---------------------- MAIN CONTENT ---------------------- */}
-      <div className="flex-1 p-6 lg:p-8 overflow-auto">
+      <div className="flex-1 p-4 lg:p-6 xl:p-8 overflow-auto">
 
         {/* ---------------------- HEADER ---------------------- */}
-        <div className="mb-8">
+        <div className="mb-6 lg:mb-8">
           <Card className="bg-linear-to-r from-emerald-600 via-green-600 to-teal-600 text-white border-0 shadow-xl">
-            <CardHeader>
-              <CardTitle className="text-3xl font-bold">Citizen Dashboard</CardTitle>
-              <CardDescription className="text-green-50">
+            <CardHeader className="p-4 lg:p-6">
+              <CardTitle className="text-2xl lg:text-3xl font-bold">Citizen Dashboard</CardTitle>
+              <CardDescription className="text-green-50 text-sm lg:text-base">
                 Manage your NADRA services and track requests efficiently
               </CardDescription>
             </CardHeader>
@@ -395,7 +395,7 @@ return (
         </div>
 
         {/* ---------------------- STAT CARDS ---------------------- */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-6 mb-6 lg:mb-8">
 
           <Card className="border-l-4 border-l-slate-500 hover:shadow-xl transition-all duration-300 hover:scale-105 hover:-translate-y-1 bg-linear-to-br from-white to-slate-50">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
