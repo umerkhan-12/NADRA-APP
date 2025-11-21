@@ -659,12 +659,12 @@ return (
                 </p>
               </div>
             ) : (
-              <ScrollArea className="h-[600px] pr-4">
-                <div className="space-y-4">
+              <ScrollArea className="h-[600px] pr-2 sm:pr-4">
+                <div className="space-y-4 max-w-full overflow-hidden">
                   {tickets.map(t => (
                     <Card
                       key={t.id}
-                      className="border-l-4 hover:shadow-md transition-all duration-300"
+                      className="border-l-4 hover:shadow-md transition-all duration-300 w-full"
                       style={{
                         borderLeftColor:
                           t.status === "COMPLETED"
@@ -675,36 +675,36 @@ return (
                       }}
                     >
                       <CardHeader className="pb-3">
-                        <div className="flex items-start justify-between">
-                          <div className="flex items-center gap-2">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <Ticket className="h-5 w-5 text-muted-foreground" />
-                            <CardTitle className="text-lg">
+                            <CardTitle className="text-base sm:text-lg">
                               Ticket #{t.id}
                             </CardTitle>
                             {getPriorityBadge(t.customerPriority)}
                           </div>
-                          <div className={`px-4 py-2 rounded-full text-sm flex items-center gap-1 ${getStatusColor(t.status)}`}>
+                          <div className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm flex items-center gap-1 whitespace-nowrap ${getStatusColor(t.status)}`}>
                             {getStatusIcon(t.status)}
                             {t.status.replace("_", " ")}
                           </div>
                         </div>
                       </CardHeader>
                       <CardContent className="space-y-3">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                          <div className="flex items-center gap-2">
-                            <Settings className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-muted-foreground">Service:</span>
-                            <span>{t.serviceName}</span>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                          <div className="flex items-center gap-2 overflow-hidden">
+                            <Settings className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                            <span className="text-muted-foreground flex-shrink-0">Service:</span>
+                            <span className="truncate">{t.serviceName}</span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <CreditCard className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-muted-foreground">Price:</span>
+                            <CreditCard className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                            <span className="text-muted-foreground flex-shrink-0">Price:</span>
                             <span>Rs. {t.fee?.toFixed(2) || 0}</span>
                           </div>
-                          <div className="flex items-center gap-2 md:col-span-2">
-                            <Calendar className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-muted-foreground">Created:</span>
-                            <span>
+                          <div className="flex items-center gap-2 sm:col-span-2 overflow-hidden">
+                            <Calendar className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                            <span className="text-muted-foreground flex-shrink-0">Created:</span>
+                            <span className="text-xs sm:text-sm truncate">
                               {new Date(t.createdAt).toLocaleString()}
                             </span>
                           </div>
@@ -713,15 +713,15 @@ return (
                         {/* Delivery Info */}
                         {t.delivery && (
                           <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                            <div className="flex items-center gap-2 mb-2">
+                            <div className="flex flex-wrap items-center gap-2 mb-2">
                               <Truck className="h-4 w-4 text-blue-600" />
                               <span className="text-sm font-semibold text-blue-900">Delivery Details</span>
-                              <Badge variant="outline" className="ml-auto text-xs">
+                              <Badge variant="outline" className="text-xs">
                                 {t.delivery.status}
                               </Badge>
                             </div>
                             <div className="text-xs text-gray-700 space-y-1">
-                              <p><strong>Address:</strong> {t.delivery.address}</p>
+                              <p className="break-words"><strong>Address:</strong> {t.delivery.address}</p>
                               <p><strong>City:</strong> {t.delivery.city}</p>
                               <p><strong>Phone:</strong> {t.delivery.phone}</p>
                             </div>
