@@ -64,7 +64,7 @@ export async function POST(req) {
     await prisma.oTP.create({
       data: {
         phoneNumber: phone,
-        otp,
+        code: otp,
         expiresAt,
         verified: false,
         // Store user data temporarily for registration after verification
@@ -103,7 +103,7 @@ export async function POST(req) {
       
       // Delete the OTP since we couldn't send it
       await prisma.oTP.deleteMany({
-        where: { phoneNumber: phone, otp },
+        where: { phoneNumber: phone, code: otp },
       });
 
       return NextResponse.json(
