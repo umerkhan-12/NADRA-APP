@@ -164,10 +164,15 @@ model ChatbotLog {
 
 // to store otp
 model OTP {
-  id        Int      @id @default(autoincrement())
-  email     String
-  code      String
-  createdAt DateTime @default(now())
+  id          Int      @id @default(autoincrement())
+  email       String?
+  phoneNumber String?
+  code        String?
+  otp         String?
+  expiresAt   DateTime?
+  verified    Boolean  @default(false)
+  metadata    String?  @db.Text
+  createdAt   DateTime @default(now())
 }
 
 // NextAuth Session Management
