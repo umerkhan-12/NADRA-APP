@@ -29,30 +29,24 @@ export default function RegisterPage() {
     e.preventDefault();
     setLoading(true);
 
-    const loadingToast = toast.loading("Sending OTP to your email...");
+    const loadingToast = toast.loading("Creating your account...");
 
-    const res = await fetch("/api/auth/send-otp", {
+    const res = await fetch("/api/auth/register-direct", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: form.email }),
+      body: JSON.stringify(form),
     });
 
     const data = await res.json();
     setLoading(false);
 
-    if (data.redirect) {
-      toast.error(data.error || "Email already registered", { id: loadingToast });
-      setTimeout(() => {
-        window.location.href = data.redirect;
-      }, 2000);
-      return;
-    }
-
     if (data.success) {
-      setOtpSent(true);
-      toast.success("OTP sent successfully! Check your email.", { id: loadingToast });
+      toast.success("Account created! Redirecting to login...", { id: loadingToast });
+      setTimeout(() => {
+        window.location.href = "/login";
+      }, 2000);
     } else {
-      toast.error(data.error || "Failed to send OTP", { id: loadingToast });
+      toast.error(data.error || "Registration failed", { id: loadingToast });
     }
   }
 
@@ -203,7 +197,7 @@ export default function RegisterPage() {
                     />
                   </div>
 
-                  {/* Send OTP Button */}
+                  {/* Register Button */}
                   <Button
                     type="submit"
                     disabled={loading}
@@ -212,12 +206,12 @@ export default function RegisterPage() {
                     {loading ? (
                       <span className="flex items-center gap-2">
                         <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                        Sending OTP...
+                        Creating Account...
                       </span>
                     ) : (
                       <span className="flex items-center gap-2">
-                        <Mail className="w-5 h-5" />
-                        Send OTP
+                        <UserPlus className="w-5 h-5" />
+                        Create Account
                         <ArrowRight className="w-5 h-5" />
                       </span>
                     )}
