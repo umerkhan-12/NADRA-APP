@@ -17,8 +17,9 @@ export default function RegisterPage() {
   const [form, setForm] = useState({
     name: "",
     email: "",
-    phone: "",
+    phoneNumber: "",
     password: "",
+    cnic: "",
   });
 
   const [otpSent, setOtpSent] = useState(false);
@@ -29,9 +30,9 @@ export default function RegisterPage() {
     e.preventDefault();
     setLoading(true);
 
-    const loadingToast = toast.loading("Creating your account...");
+    const loadingToast = toast.loading("Sending OTP to your phone...");
 
-    const res = await fetch("/api/auth/register-direct", {
+    const res = await fetch("/api/auth/send-otp-sms", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(form),
@@ -41,12 +42,10 @@ export default function RegisterPage() {
     setLoading(false);
 
     if (data.success) {
-      toast.success("Account created! Redirecting to login...", { id: loadingToast });
-      setTimeout(() => {
-        window.location.href = "/login";
-      }, 2000);
+      toast.success("OTP sent! Check your phone.", { id: loadingToast });
+      setOtpSent(true);
     } else {
-      toast.error(data.error || "Registration failed", { id: loadingToast });
+      toast.error(data.error || "Failed to send OTP", { id: loadingToast });
     }
   }
 
@@ -56,10 +55,10 @@ export default function RegisterPage() {
 
     const loadingToast = toast.loading("Verifying OTP and creating account...");
 
-    const res = await fetch("/api/auth/verify-otp", {
+    const res = await fetch("/api/auth/verify-otp-sms", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...form, otp }),
+      body: JSON.stringify({ phoneNumber: form.phoneNumber, otp }),
     });
 
     const data = await res.json();
@@ -125,7 +124,7 @@ export default function RegisterPage() {
                   Create Account
                 </CardTitle>
                 <CardDescription className="text-white/90 text-sm">
-                  {otpSent ? "Verify your email" : "Register as a citizen"}
+                  {otpSent ? "Verify your phone number" : "Register as a citizen"}
                 </CardDescription>
               </div>
             </div>
@@ -164,18 +163,36 @@ export default function RegisterPage() {
                     />
                   </div>
 
-                  {/* Phone */}
+                  {/* Phone Number */}
                   <div className="space-y-2">
                     <Label className="text-white font-semibold text-sm flex items-center gap-2">
                       <Phone className="h-4 w-4" /> Phone Number
                     </Label>
                     <Input
-                      placeholder="03XX-XXXXXXX"
+                      placeholder="+923001234567"
                       className="bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:ring-2 focus:ring-white/50 h-10 rounded-xl backdrop-blur-sm"
                       required
-                      value={form.phone}
+                      value={form.phoneNumber}
                       onChange={(e) =>
-                        setForm({ ...form, phone: e.target.value })
+                        setForm({ ...form, phoneNumber: e.target.value })
+                      }
+                    />
+                    <p className="text-white/60 text-xs">Format: +92XXXXXXXXXX</p>
+                  </div>
+
+                  {/* CNIC */}
+                  <div className="space-y-2">
+                    <Label className="text-white font-semibold text-sm flex items-center gap-2">
+                      <KeyRound className="h-4 w-4" /> CNIC Number
+                    </Label>
+                    <Input
+                      placeholder="12345-1234567-1"
+                      maxLength={15}
+                      className="bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:ring-2 focus:ring-white/50 h-10 rounded-xl backdrop-blur-sm"
+                      required
+                      value={form.cnic}
+                      onChange={(e) =>
+                        setForm({ ...form, cnic: e.target.value })
                       }
                     />
                   </div>
@@ -206,12 +223,12 @@ export default function RegisterPage() {
                     {loading ? (
                       <span className="flex items-center gap-2">
                         <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                        Creating Account...
+                        Sending OTP...
                       </span>
                     ) : (
                       <span className="flex items-center gap-2">
-                        <UserPlus className="w-5 h-5" />
-                        Create Account
+                        <Phone className="w-5 h-5" />
+                        Send OTP
                         <ArrowRight className="w-5 h-5" />
                       </span>
                     )}
@@ -235,11 +252,11 @@ export default function RegisterPage() {
                   {/* OTP Info Card */}
                   <div className="bg-emerald-500/20 border border-emerald-500/30 rounded-xl p-3">
                     <div className="flex items-start gap-3">
-                      <Mail className="w-5 h-5 text-emerald-300 mt-0.5" />
+                      <Phone className="w-5 h-5 text-emerald-300 mt-0.5" />
                       <div>
                         <p className="text-white font-semibold text-sm">OTP Sent!</p>
                         <p className="text-white/80 text-xs mt-1">
-                          We've sent a 6-digit code to <span className="font-semibold">{form.email}</span>
+                          We've sent a 6-digit code to <span className="font-semibold">{form.phoneNumber}</span>
                         </p>
                       </div>
                     </div>

@@ -692,18 +692,18 @@ return (
                       <CardContent className="space-y-3">
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                           <div className="flex items-center gap-2 overflow-hidden">
-                            <Settings className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                            <span className="text-muted-foreground flex-shrink-0">Service:</span>
+                            <Settings className="h-4 w-4 text-muted-foreground shrink-0" />
+                            <span className="text-muted-foreground shrink-0">Service:</span>
                             <span className="truncate">{t.serviceName}</span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <CreditCard className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                            <span className="text-muted-foreground flex-shrink-0">Price:</span>
+                            <CreditCard className="h-4 w-4 text-muted-foreground shrink-0" />
+                            <span className="text-muted-foreground shrink-0">Price:</span>
                             <span>Rs. {t.fee?.toFixed(2) || 0}</span>
                           </div>
                           <div className="flex items-center gap-2 sm:col-span-2 overflow-hidden">
-                            <Calendar className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                            <span className="text-muted-foreground flex-shrink-0">Created:</span>
+                            <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
+                            <span className="text-muted-foreground shrink-0">Created:</span>
                             <span className="text-xs sm:text-sm truncate">
                               {new Date(t.createdAt).toLocaleString()}
                             </span>
@@ -721,7 +721,7 @@ return (
                               </Badge>
                             </div>
                             <div className="text-xs text-gray-700 space-y-1">
-                              <p className="break-words"><strong>Address:</strong> {t.delivery.address}</p>
+                              <p className="wrap-break"><strong>Address:</strong> {t.delivery.address}</p>
                               <p><strong>City:</strong> {t.delivery.city}</p>
                               <p><strong>Phone:</strong> {t.delivery.phone}</p>
                             </div>
