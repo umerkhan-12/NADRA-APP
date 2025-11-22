@@ -127,15 +127,18 @@ model UploadedDocument {
 }
 
 model Payment {
-  id         Int             @id @default(autoincrement())
-  ticketId   Int    @unique
-  userId     Int
-  amount     Float
-  status     PaymentStatus @default(PENDING)
-  createdAt  DateTime @default(now())
+  id            Int             @id @default(autoincrement())
+  ticketId      Int             @unique
+  userId        Int
+  amount        Float
+  status        PaymentStatus   @default(PENDING)
+  paymentMethod String?         // "ONLINE" or "CASH_ON_DELIVERY"
+  transactionId String?         // For online payments
+  paidAt        DateTime?       // When payment was completed
+  createdAt     DateTime        @default(now())
 
-  ticket     Ticket  @relation(fields: [ticketId], references: [id])
-  user       User    @relation(fields: [userId], references: [id])
+  ticket        Ticket  @relation(fields: [ticketId], references: [id])
+  user          User    @relation(fields: [userId], references: [id])
 }
 
 model Delivery {

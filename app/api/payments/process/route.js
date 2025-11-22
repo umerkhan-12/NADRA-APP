@@ -1,0 +1,181 @@
+import { NextResponse } from "next/server";
+import prisma from "@/lib/prisma";
+import nodemailer from "nodemailer";
+
+export async function POST(req) {
+  try {
+    const { ticketId, paymentMethod, cardDetails } = await req.json();
+
+    if (!ticketId || !paymentMethod) {
+      return NextResponse.json(
+        { error: "Ticket ID and payment method are required" },
+        { status: 400 }
+      );
+    }
+
+    // Validate payment method
+    if (!["ONLINE", "CASH_ON_DELIVERY"].includes(paymentMethod)) {
+      return NextResponse.json(
+        { error: "Invalid payment method" },
+        { status: 400 }
+      );
+    }
+
+    // If online payment, validate card details
+    if (paymentMethod === "ONLINE") {
+      if (!cardDetails || !cardDetails.cardNumber || !cardDetails.cvv || !cardDetails.expiryDate) {
+        return NextResponse.json(
+          { error: "Card details are required for online payment" },
+          { status: 400 }
+        );
+      }
+
+      // Simulate card validation (accept any format for testing)
+      const cardNumber = cardDetails.cardNumber.replace(/\s/g, "");
+      if (cardNumber.length !== 16 || !/^\d+$/.test(cardNumber)) {
+        return NextResponse.json(
+          { error: "Card number must be 16 digits" },
+          { status: 400 }
+        );
+      }
+
+      if (cardDetails.cvv.length !== 3 || !/^\d+$/.test(cardDetails.cvv)) {
+        return NextResponse.json(
+          { error: "CVV must be 3 digits" },
+          { status: 400 }
+        );
+      }
+
+      if (cardDetails.expiryDate.length !== 4 || !/^\d+$/.test(cardDetails.expiryDate)) {
+        return NextResponse.json(
+          { error: "Expiry date must be in MMYY format" },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Fetch payment record
+    const payment = await prisma.payment.findUnique({
+      where: { ticketId: parseInt(ticketId) },
+      include: {
+        user: true,
+        ticket: {
+          include: {
+            service: true,
+          },
+        },
+      },
+    });
+
+    if (!payment) {
+      return NextResponse.json(
+        { error: "Payment record not found" },
+        { status: 404 }
+      );
+    }
+
+    if (payment.status === "COMPLETED") {
+      return NextResponse.json(
+        { error: "Payment already completed" },
+        { status: 400 }
+      );
+    }
+
+    // Simulate payment processing delay
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    // Update payment based on method
+    const updatedPayment = await prisma.payment.update({
+      where: { id: payment.id },
+      data: {
+        status: paymentMethod === "ONLINE" ? "COMPLETED" : "PENDING",
+        paymentMethod: paymentMethod,
+        transactionId:
+          paymentMethod === "ONLINE"
+            ? `TXN${Date.now()}${Math.random().toString(36).substring(7).toUpperCase()}`
+            : null,
+        paidAt: paymentMethod === "ONLINE" ? new Date() : null,
+      },
+    });
+
+    // Send confirmation email
+    setImmediate(async () => {
+      try {
+        const transporter = nodemailer.createTransport({
+          service: "gmail",
+          auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS,
+          },
+        });
+
+        const emailSubject =
+          paymentMethod === "ONLINE"
+            ? `Payment Confirmed - Ticket #${ticketId}`
+            : `Payment Pending (COD) - Ticket #${ticketId}`;
+
+        const emailContent =
+          paymentMethod === "ONLINE"
+            ? `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #047857;">✅ Payment Successful</h2>
+            <p>Dear ${payment.user.name},</p>
+            <p>Your payment has been successfully processed.</p>
+            <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <p><strong>Transaction ID:</strong> ${updatedPayment.transactionId}</p>
+              <p><strong>Ticket ID:</strong> #${ticketId}</p>
+              <p><strong>Service:</strong> ${payment.ticket.service.name}</p>
+              <p><strong>Amount:</strong> Rs. ${payment.amount.toFixed(2)}</p>
+              <p><strong>Payment Method:</strong> Online Card Payment</p>
+              <p><strong>Status:</strong> Completed</p>
+            </div>
+            <p>Your ticket is now being processed.</p>
+            <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
+            <p style="color: #6b7280; font-size: 12px;">This is an automated message from NADRA Citizen Portal.</p>
+          </div>
+        `
+            : `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #2563EB;">📦 Cash on Delivery Selected</h2>
+            <p>Dear ${payment.user.name},</p>
+            <p>You have selected Cash on Delivery for your service.</p>
+            <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <p><strong>Ticket ID:</strong> #${ticketId}</p>
+              <p><strong>Service:</strong> ${payment.ticket.service.name}</p>
+              <p><strong>Amount to Pay:</strong> Rs. ${payment.amount.toFixed(2)}</p>
+              <p><strong>Payment Method:</strong> Cash on Delivery</p>
+              <p><strong>Status:</strong> Pending (Pay when you receive documents)</p>
+            </div>
+            <p><strong>Important:</strong> Please keep the exact amount ready when our delivery agent arrives.</p>
+            <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
+            <p style="color: #6b7280; font-size: 12px;">This is an automated message from NADRA Citizen Portal.</p>
+          </div>
+        `;
+
+        await transporter.sendMail({
+          from: process.env.EMAIL_USER,
+          to: payment.user.email,
+          subject: emailSubject,
+          html: emailContent,
+        });
+      } catch (emailErr) {
+        console.error("Email failed:", emailErr);
+      }
+    });
+
+    return NextResponse.json({
+      success: true,
+      message:
+        paymentMethod === "ONLINE"
+          ? "Payment completed successfully"
+          : "Cash on Delivery selected. Pay when you receive your documents.",
+      payment: updatedPayment,
+    });
+  } catch (error) {
+    console.error("Payment processing error:", error);
+    return NextResponse.json(
+      { error: "Failed to process payment" },
+      { status: 500 }
+    );
+  }
+}

@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import DashboardChatbot from '@/components/DashboardChatbot';
+import PaymentModal from '@/components/PaymentModal';
 import { 
   User, 
   Ticket, 
@@ -46,6 +47,10 @@ export default function UserDashboard() {
   // Document upload states
   const [selectedTicketId, setSelectedTicketId] = useState(null);
   const [uploadingFile, setUploadingFile] = useState(false);
+  
+  // Payment modal state
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [selectedTicketForPayment, setSelectedTicketForPayment] = useState(null);
   
   // Delivery states
   const [deliveryAddress, setDeliveryAddress] = useState("");
@@ -167,6 +172,7 @@ export default function UserDashboard() {
         documents: data.ticket.documents || [],
         delivery: data.ticket.delivery || null,
         requiredDocuments: data.ticket.service?.requiredDocuments || [],
+        payment: data.ticket.payment || null, // Include payment
       };
       
       // Reset form
@@ -226,6 +232,21 @@ export default function UserDashboard() {
       alert("Failed to upload document");
     }
   }
+
+  // Handle payment modal open
+  const handleOpenPayment = (ticket) => {
+    setSelectedTicketForPayment(ticket);
+    setShowPaymentModal(true);
+  };
+
+  // Handle payment success
+  const handlePaymentSuccess = async (updatedPayment) => {
+    // Refresh tickets to show updated payment status
+    const ticketsRes = await fetch(`/api/tickets/user/${parseInt(session.user.id, 10)}`);
+    const ticketsData = await ticketsRes.json();
+    setTickets(ticketsData.tickets || []);
+    alert("✅ Payment processed successfully!");
+  };
 
   const totalTickets = tickets.length;
   const completedTickets = tickets.filter(t => t.status === "COMPLETED").length;
@@ -821,6 +842,28 @@ return (
                               PDF, JPG, PNG, DOC (Max 5MB)
                             </p>
                             
+                            {/* Payment Button - Show if payment is pending */}
+                            {t.payment?.status === 'PENDING' && (
+                              <Button
+                                onClick={() => handleOpenPayment(t)}
+                                className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white"
+                                size="sm"
+                              >
+                                <CreditCard className="h-4 w-4 mr-2" />
+                                Pay Now (Rs. {t.payment.amount?.toLocaleString() || '0'})
+                              </Button>
+                            )}
+
+                            {/* Payment Status Badge */}
+                            {t.payment?.status === 'COMPLETED' && (
+                              <div className="p-2 bg-green-50 rounded-lg border border-green-200 flex items-center justify-center gap-2">
+                                <CheckCircle2 className="h-4 w-4 text-green-600" />
+                                <span className="text-sm font-semibold text-green-700">
+                                  Payment Completed
+                                </span>
+                              </div>
+                            )}
+                            
                             {/* View Receipt Button */}
                             <Button
                               onClick={() => router.push(`/USER/receipt/${t.id}`)}
@@ -840,6 +883,18 @@ return (
             )}
           </CardContent>
         </Card>
+
+        {/* Payment Modal */}
+        {showPaymentModal && selectedTicketForPayment && (
+          <PaymentModal
+            ticket={selectedTicketForPayment}
+            onClose={() => {
+              setShowPaymentModal(false);
+              setSelectedTicketForPayment(null);
+            }}
+            onPaymentSuccess={handlePaymentSuccess}
+          />
+        )}
 
       </div>
     </div>

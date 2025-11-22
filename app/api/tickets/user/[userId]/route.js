@@ -24,6 +24,7 @@ export async function GET(req, context) {
         },
         documents: true,
         delivery: true,
+        payment: true, // Include payment information
       },
       orderBy: { createdAt: "desc" },
     });
@@ -38,6 +39,7 @@ export async function GET(req, context) {
       documents: t.documents || [],
       delivery: t.delivery || null,
       requiredDocuments: t.service?.requiredDocuments || [],
+      payment: t.payment || null, // Include payment in response
     }));
 
     return NextResponse.json({ tickets: formattedTickets });
