@@ -30,7 +30,8 @@ import {
   Upload,
   Truck,
   Download,
-  File
+  File,
+  Users
 } from 'lucide-react';
 
 export default function UserDashboard() {
@@ -99,15 +100,25 @@ export default function UserDashboard() {
   useEffect(() => {
     if (status !== "authenticated" || !session?.user?.id) return;
 
-    setTicketsLoading(true);
-    fetch(`/api/tickets/user/${parseInt(session.user.id, 10)}`)
-      .then(res => res.json())
-      .then(data => {
-        setTickets(data.tickets || []);
-        console.log("Fetched tickets from API:", data);  
-      })
-      .catch(console.error)
-      .finally(() => setTicketsLoading(false));
+    const fetchTickets = () => {
+      setTicketsLoading(true);
+      fetch(`/api/tickets/user/${parseInt(session.user.id, 10)}`)
+        .then(res => res.json())
+        .then(data => {
+          setTickets(data.tickets || []);
+          console.log("Fetched tickets from API:", data);  
+        })
+        .catch(console.error)
+        .finally(() => setTicketsLoading(false));
+    };
+
+    // Initial fetch
+    fetchTickets();
+
+    // Auto-refresh every 30 seconds to update queue positions
+    const interval = setInterval(fetchTickets, 30000);
+
+    return () => clearInterval(interval);
   }, [session, status]);
 
   async function handleTicketCreate() {
@@ -731,6 +742,39 @@ return (
                           </div>
                         </div>
 
+                        {/* Queue Position - Show only for OPEN or IN_PROGRESS tickets */}
+                        {(t.status === 'OPEN' || t.status === 'IN_PROGRESS') && t.queuePosition && (
+                          <div className="mt-3 p-3 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border-2 border-purple-200">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Users className="h-5 w-5 text-purple-600" />
+                              <span className="text-sm font-bold text-purple-900">
+                                Queue Position
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <div className="flex items-center justify-center h-12 w-12 rounded-full bg-purple-600 text-white text-xl font-bold shadow-lg">
+                                  #{t.queuePosition}
+                                </div>
+                                <div>
+                                  {t.queuePosition === 1 ? (
+                                    <p className="text-sm font-semibold text-green-600">🎉 You're next!</p>
+                                  ) : (
+                                    <p className="text-sm text-gray-700">
+                                      <strong>{t.queuePosition - 1}</strong> ticket(s) ahead
+                                    </p>
+                                  )}
+                                  {t.status === 'IN_PROGRESS' && (
+                                    <p className="text-xs text-blue-600 font-semibold mt-1">
+                                      ⚡ Being processed now
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
                         {/* Delivery Info */}
                         {t.delivery && (
                           <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
@@ -846,7 +890,7 @@ return (
                             {t.payment?.status === 'PENDING' && (
                               <Button
                                 onClick={() => handleOpenPayment(t)}
-                                className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white"
+                                className="w-full bg-linear-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white"
                                 size="sm"
                               >
                                 <CreditCard className="h-4 w-4 mr-2" />
@@ -867,7 +911,7 @@ return (
                             {/* View Receipt Button */}
                             <Button
                               onClick={() => router.push(`/USER/receipt/${t.id}`)}
-                              className="w-full bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 text-white"
+                              className="w-full bg-linear-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 text-white"
                               size="sm"
                             >
                               <FileText className="h-4 w-4 mr-2" />

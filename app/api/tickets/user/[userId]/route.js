@@ -40,6 +40,7 @@ export async function GET(req, context) {
       delivery: t.delivery || null,
       requiredDocuments: t.service?.requiredDocuments || [],
       payment: t.payment || null, // Include payment in response
+      queuePosition: t.queuePosition, // Include queue position
     }));
 
     return NextResponse.json({ tickets: formattedTickets });

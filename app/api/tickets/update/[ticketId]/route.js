@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import nodemailer from "nodemailer";
+import { recalculateQueuePositions } from "@/lib/queueHelper";
 
 export async function PATCH(req, context) {
   const params = await context.params;
@@ -152,6 +153,9 @@ export async function PATCH(req, context) {
         }
       });
     }
+
+    // Recalculate queue positions after status change
+    await recalculateQueuePositions();
 
     return NextResponse.json({
       success: true,

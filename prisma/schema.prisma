@@ -90,6 +90,9 @@ model Ticket {
   customerPriority CustomerPriority @default(NORMAL) // user-selected
   finalPriority    Int          // servicePriority - boost
 
+  // QUEUE SYSTEM
+  queuePosition    Int?         // Position in queue (1 = first)
+
   status           TicketStatus @default(OPEN)
   createdAt        DateTime     @default(now())
   closedAt         DateTime?
