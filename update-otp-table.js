@@ -25,6 +25,14 @@ async function updateOTPTable() {
     
     console.log('\nUpdating table...\n');
 
+    // Fix expiresAt column to DATETIME(3)
+    try {
+      await connection.query('ALTER TABLE `OTP` MODIFY COLUMN `expiresAt` DATETIME(3) NULL');
+      console.log('✓ Fixed expiresAt to DATETIME(3)');
+    } catch (e) {
+      console.log('⚠️  expiresAt column:', e.message);
+    }
+
     // Make email nullable
     try {
       await connection.query('ALTER TABLE `OTP` MODIFY COLUMN `email` VARCHAR(191) NULL');
@@ -39,6 +47,14 @@ async function updateOTPTable() {
       console.log('✓ Made code nullable');
     } catch (e) {
       console.log('⚠️  Code column:', e.message);
+    }
+    
+    // Clean expired OTPs
+    try {
+      const [result] = await connection.query('DELETE FROM `OTP` WHERE `expiresAt` < NOW()');
+      console.log(`✓ Deleted ${result.affectedRows} expired OTPs`);
+    } catch (e) {
+      console.log('⚠️  Cleanup:', e.message);
     }
 
     console.log('\n✅ OTP table updated successfully!');

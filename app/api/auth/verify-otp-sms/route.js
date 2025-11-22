@@ -36,7 +36,7 @@ export async function POST(req) {
 
     // Check if OTP is expired
     const now = new Date();
-    const expires = new Date(otpRecord.expiresAt);
+    const expires = new Date(otpRecord.expireat);
     console.log("Current time:", now.toISOString());
     console.log("Expires at:", expires.toISOString());
     console.log("Is expired?", now > expires);

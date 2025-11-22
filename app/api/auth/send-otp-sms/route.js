@@ -52,7 +52,7 @@ export async function POST(req) {
 
     // Generate OTP
     const otp = generateOTP();
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+    const expireat = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
     // Delete any existing OTPs for this email
     await prisma.OTP.deleteMany({
@@ -65,7 +65,7 @@ export async function POST(req) {
         email,
         phoneNumber: phone || "", // Include phone field to satisfy database constraint
         code: otp,
-        expiresAt,
+        expireat,
         verified: false,
         metaData: JSON.stringify({ name, email, password, cnic, phone }),
       },
