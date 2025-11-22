@@ -33,7 +33,7 @@ export async function POST(req) {
     }
 
     // Check if OTP is expired
-    if (new Date() > otpRecord.expiresAt) {
+    if (new Date() > new Date(otpRecord.expiresAt)) {
       await prisma.OTP.delete({
         where: { id: otpRecord.id },
       });
