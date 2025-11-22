@@ -744,7 +744,7 @@ return (
 
                         {/* Queue Position - Show only for OPEN or IN_PROGRESS tickets */}
                         {(t.status === 'OPEN' || t.status === 'IN_PROGRESS') && t.queuePosition && (
-                          <div className="mt-3 p-3 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border-2 border-purple-200">
+                          <div className="mt-3 p-3 bg-linear-to-r from-purple-50 to-pink-50 rounded-lg border-2 border-purple-200">
                             <div className="flex items-center gap-2 mb-2">
                               <Users className="h-5 w-5 text-purple-600" />
                               <span className="text-sm font-bold text-purple-900">
@@ -906,6 +906,18 @@ return (
                                   Payment Completed
                                 </span>
                               </div>
+                            )}
+                            
+                            {/* Track Delivery Button - Show if delivery exists */}
+                            {t.delivery && (
+                              <Button
+                                onClick={() => router.push(`/USER/delivery/${t.delivery.id}`)}
+                                className="w-full bg-linear-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
+                                size="sm"
+                              >
+                                <Truck className="h-4 w-4 mr-2" />
+                                Track Delivery
+                              </Button>
                             )}
                             
                             {/* View Receipt Button */}

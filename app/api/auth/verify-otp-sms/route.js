@@ -17,7 +17,6 @@ export async function POST(req) {
     const otpRecord = await prisma.OTP.findFirst({
       where: {
         email,
-        code: otp,
         verified: false,
       },
       orderBy: {
@@ -29,8 +28,20 @@ export async function POST(req) {
 
     if (!otpRecord) {
       return NextResponse.json(
-        { error: "Invalid OTP" },
+        { error: "No OTP found for this email. Please request a new one." },
         { status: 400 }
+      );
+    }
+
+    // ✅ CHECK ATTEMPT LIMIT (max 5 failed attempts)
+    if (otpRecord.attempts >= 5) {
+      // Delete the OTP and force user to request a new one
+      await prisma.OTP.delete({
+        where: { id: otpRecord.id },
+      });
+      return NextResponse.json(
+        { error: "Too many failed attempts. Please request a new OTP." },
+        { status: 429 }
       );
     }
 
@@ -41,6 +52,23 @@ export async function POST(req) {
       });
       return NextResponse.json(
         { error: "OTP has expired. Please request a new one." },
+        { status: 400 }
+      );
+    }
+
+    // ✅ VERIFY OTP CODE
+    if (otpRecord.code !== otp) {
+      // Increment attempt counter
+      await prisma.OTP.update({
+        where: { id: otpRecord.id },
+        data: { attempts: { increment: 1 } }
+      });
+      
+      const remainingAttempts = 5 - (otpRecord.attempts + 1);
+      return NextResponse.json(
+        { 
+          error: `Invalid OTP. ${remainingAttempts} attempt${remainingAttempts !== 1 ? 's' : ''} remaining.` 
+        },
         { status: 400 }
       );
     }

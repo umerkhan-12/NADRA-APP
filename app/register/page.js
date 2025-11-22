@@ -182,13 +182,12 @@ export default function RegisterPage() {
                   {/* CNIC */}
                   <div className="space-y-2">
                     <Label className="text-white font-semibold text-sm flex items-center gap-2">
-                      <KeyRound className="h-4 w-4" /> CNIC Number
+                      <KeyRound className="h-4 w-4" /> CNIC Number <span className="text-white/60 text-xs font-normal">(Optional)</span>
                     </Label>
                     <Input
                       placeholder="12345-1234567-1"
                       maxLength={15}
                       className="bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:ring-2 focus:ring-white/50 h-10 rounded-xl backdrop-blur-sm"
-                      required
                       value={form.cnic}
                       onChange={(e) =>
                         setForm({ ...form, cnic: e.target.value })

@@ -104,6 +104,12 @@ model Ticket {
   documents        UploadedDocument[]
   payment          Payment?
   delivery         Delivery?
+  
+  @@index([status])
+  @@index([queuePosition])
+  @@index([customerPriority, finalPriority, createdAt])
+  @@index([agentId, status])
+  @@index([userId, createdAt])
 }
 enum CustomerPriority {
   NORMAL
@@ -116,7 +122,9 @@ model TicketLog {
   message   String
   time      DateTime  @default(now())
 
-  ticket    Ticket    @relation(fields: [ticketId], references: [id])
+  ticket    Ticket    @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  
+  @@index([ticketId])
 }
 
 model UploadedDocument {
@@ -126,7 +134,9 @@ model UploadedDocument {
   fileType  String
   uploadedAt DateTime @default(now())
 
-  ticket    Ticket    @relation(fields: [ticketId], references: [id])
+  ticket    Ticket    @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  
+  @@index([ticketId])
 }
 
 model Payment {
@@ -140,20 +150,41 @@ model Payment {
   paidAt        DateTime?       // When payment was completed
   createdAt     DateTime        @default(now())
 
-  ticket        Ticket  @relation(fields: [ticketId], references: [id])
+  ticket        Ticket  @relation(fields: [ticketId], references: [id], onDelete: Cascade)
   user          User    @relation(fields: [userId], references: [id])
+  
+  @@index([userId])
+  @@index([status])
 }
 
 model Delivery {
-  id          Int       @id @default(autoincrement())
-  ticketId    Int       @unique
-  address     String
-  city        String
-  phone       String
-  status      String   @default("PENDING")
-  createdAt   DateTime @default(now())
+  id                Int       @id @default(autoincrement())
+  ticketId          Int       @unique
+  address           String
+  city              String
+  phone             String
+  status            DeliveryStatus @default(PENDING)
+  trackingNumber    String?   // Generated tracking number
+  agentName         String?   // Delivery agent name
+  agentPhone        String?   // Delivery agent contact
+  estimatedDelivery DateTime? // Expected delivery date
+  actualDelivery    DateTime? // Actual delivery date
+  notes             String?   @db.Text // Delivery notes/instructions
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @default(now()) @updatedAt
 
-  ticket      Ticket    @relation(fields: [ticketId], references: [id])
+  ticket            Ticket    @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  
+  @@index([status])
+  @@index([trackingNumber])
+}
+
+enum DeliveryStatus {
+  PENDING
+  DISPATCHED
+  IN_TRANSIT
+  DELIVERED
+  CANCELLED
 }
 
 model ChatbotLog {
@@ -176,8 +207,12 @@ model OTP {
   code        String?
   expireat    DateTime? @db.DateTime(3)
   verified    Boolean  @default(false)
+  attempts    Int      @default(0)  // Track failed verification attempts
   metaData    String?  @db.Text
   createdAt   DateTime @default(now())
+  
+  @@index([email, code])
+  @@index([expireat])
 }
 
 // NextAuth Session Management

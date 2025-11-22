@@ -4,7 +4,7 @@ import { getQueueInfo } from "@/lib/queueHelper";
 export async function GET(req, context) {
   try {
     const params = await context.params;
-    const ticketId = params.ticketId;
+    const ticketId = params.id;
 
     if (!ticketId) {
       return NextResponse.json(

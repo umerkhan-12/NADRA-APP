@@ -9,12 +9,27 @@ export async function GET(req, context) {
 
     if (!userId) return NextResponse.json({ tickets: [] });
 
+    // ✅ OPTIMIZED: Use select instead of include to reduce data transfer
     const tickets = await prisma.ticket.findMany({
       where: { userId },
-      include: { 
+      select: {
+        id: true,
+        status: true,
+        customerPriority: true,
+        queuePosition: true,
+        createdAt: true,
         service: {
-          include: {
+          select: {
+            id: true,
+            name: true,
+            fee: true,
             requiredDocuments: {
+              select: {
+                id: true,
+                documentName: true,
+                description: true,
+                isMandatory: true
+              },
               orderBy: [
                 { isMandatory: 'desc' },
                 { documentName: 'asc' }
@@ -22,9 +37,34 @@ export async function GET(req, context) {
             }
           }
         },
-        documents: true,
-        delivery: true,
-        payment: true, // Include payment information
+        documents: {
+          select: {
+            id: true,
+            filePath: true,
+            fileType: true,
+            uploadedAt: true
+          }
+        },
+        delivery: {
+          select: {
+            id: true,
+            status: true,
+            trackingNumber: true,
+            address: true,
+            city: true,
+            phone: true
+          }
+        },
+        payment: {
+          select: {
+            id: true,
+            status: true,
+            amount: true,
+            paymentMethod: true,
+            transactionId: true,
+            paidAt: true
+          }
+        }
       },
       orderBy: { createdAt: "desc" },
     });
@@ -39,8 +79,8 @@ export async function GET(req, context) {
       documents: t.documents || [],
       delivery: t.delivery || null,
       requiredDocuments: t.service?.requiredDocuments || [],
-      payment: t.payment || null, // Include payment in response
-      queuePosition: t.queuePosition, // Include queue position
+      payment: t.payment || null,
+      queuePosition: t.queuePosition,
     }));
 
     return NextResponse.json({ tickets: formattedTickets });

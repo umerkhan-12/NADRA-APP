@@ -54,51 +54,61 @@ export async function POST(req) {
       }
     }
 
-    // Fetch payment record
-    const payment = await prisma.payment.findUnique({
-      where: { ticketId: parseInt(ticketId) },
-      include: {
-        user: true,
-        ticket: {
-          include: {
-            service: true,
+    // ✅ USE TRANSACTION for idempotency protection
+    const updatedPayment = await prisma.$transaction(async (tx) => {
+      // Fetch payment record within transaction
+      const payment = await tx.payment.findUnique({
+        where: { ticketId: parseInt(ticketId) },
+        include: {
+          user: true,
+          ticket: {
+            include: {
+              service: true,
+            },
           },
         },
-      },
+      });
+
+      if (!payment) {
+        throw new Error("Payment record not found");
+      }
+
+      // ✅ IDEMPOTENCY CHECK - Prevent double payment
+      if (payment.status === "COMPLETED") {
+        throw new Error("Payment already completed");
+      }
+
+      // Simulate payment processing delay (outside transaction for better performance)
+      // In production, this would be an external API call
+      // For now, we'll do it before the transaction
+
+      // Update payment based on method
+      return await tx.payment.update({
+        where: { id: payment.id },
+        data: {
+          status: paymentMethod === "ONLINE" ? "COMPLETED" : "PENDING",
+          paymentMethod: paymentMethod,
+          transactionId:
+            paymentMethod === "ONLINE"
+              ? `TXN${Date.now()}${Math.random().toString(36).substring(7).toUpperCase()}`
+              : null,
+          paidAt: paymentMethod === "ONLINE" ? new Date() : null,
+        },
+        include: {
+          user: true,
+          ticket: {
+            include: {
+              service: true,
+            },
+          },
+        },
+      });
     });
 
-    if (!payment) {
-      return NextResponse.json(
-        { error: "Payment record not found" },
-        { status: 404 }
-      );
-    }
-
-    if (payment.status === "COMPLETED") {
-      return NextResponse.json(
-        { error: "Payment already completed" },
-        { status: 400 }
-      );
-    }
-
-    // Simulate payment processing delay
+    // Simulate payment processing delay AFTER transaction
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
-    // Update payment based on method
-    const updatedPayment = await prisma.payment.update({
-      where: { id: payment.id },
-      data: {
-        status: paymentMethod === "ONLINE" ? "COMPLETED" : "PENDING",
-        paymentMethod: paymentMethod,
-        transactionId:
-          paymentMethod === "ONLINE"
-            ? `TXN${Date.now()}${Math.random().toString(36).substring(7).toUpperCase()}`
-            : null,
-        paidAt: paymentMethod === "ONLINE" ? new Date() : null,
-      },
-    });
-
-    // Send confirmation email
+    // Send confirmation email (non-blocking)
     setImmediate(async () => {
       try {
         const transporter = nodemailer.createTransport({
@@ -173,8 +183,24 @@ export async function POST(req) {
     });
   } catch (error) {
     console.error("Payment processing error:", error);
+    
+    // ✅ Better error handling for idempotency errors
+    if (error.message === "Payment already completed") {
+      return NextResponse.json(
+        { error: "Payment already completed for this ticket" },
+        { status: 409 } // Conflict status code
+      );
+    }
+    
+    if (error.message === "Payment record not found") {
+      return NextResponse.json(
+        { error: "Payment record not found" },
+        { status: 404 }
+      );
+    }
+    
     return NextResponse.json(
-      { error: "Failed to process payment" },
+      { error: error.message || "Failed to process payment" },
       { status: 500 }
     );
   }

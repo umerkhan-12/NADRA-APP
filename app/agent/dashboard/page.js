@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { User, Ticket, LogOut, FileText, Clock, CheckCircle2, Settings, AlertCircle, Zap, Download, File, Truck } from "lucide-react";
+import DeliveryUpdateModal from "@/components/DeliveryUpdateModal";
 
 export default function AgentDashboard() {
   const { data: session, status } = useSession();
@@ -16,6 +17,8 @@ export default function AgentDashboard() {
   const [tickets, setTickets] = useState([]);
   const [agent, setAgent] = useState({});
   const [ticketsLoading, setTicketsLoading] = useState(true);
+  const [selectedDelivery, setSelectedDelivery] = useState(null);
+  const [showDeliveryModal, setShowDeliveryModal] = useState(false);
 
   // Check authentication
   useEffect(() => {
@@ -112,6 +115,27 @@ export default function AgentDashboard() {
       console.error(err);
       alert("Failed to update ticket status.");
     }
+  };
+
+  const handleOpenDeliveryModal = (delivery) => {
+    setSelectedDelivery(delivery);
+    setShowDeliveryModal(true);
+  };
+
+  const handleCloseDeliveryModal = () => {
+    setShowDeliveryModal(false);
+    setSelectedDelivery(null);
+  };
+
+  const handleDeliveryUpdate = (updatedDelivery) => {
+    // Update the delivery in the tickets list
+    setTickets(prev =>
+      prev.map(t =>
+        t.delivery?.id === updatedDelivery.id
+          ? { ...t, delivery: updatedDelivery }
+          : t
+      )
+    );
   };
 
   const totalTickets = tickets.length;
@@ -344,11 +368,25 @@ export default function AgentDashboard() {
                                 {t.delivery.status}
                               </Badge>
                             </div>
-                            <div className="text-xs text-gray-700 space-y-1">
+                            <div className="text-xs text-gray-700 space-y-1 mb-3">
                               <p><strong>Address:</strong> {t.delivery.address}</p>
                               <p><strong>City:</strong> {t.delivery.city}</p>
                               <p><strong>Phone:</strong> {t.delivery.phone}</p>
+                              {t.delivery.trackingNumber && (
+                                <p><strong>Tracking:</strong> {t.delivery.trackingNumber}</p>
+                              )}
+                              {t.delivery.agentName && (
+                                <p><strong>Agent:</strong> {t.delivery.agentName}</p>
+                              )}
                             </div>
+                            <Button
+                              size="sm"
+                              onClick={() => handleOpenDeliveryModal(t.delivery)}
+                              className="w-full bg-linear-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white"
+                            >
+                              <Truck className="h-4 w-4 mr-2" />
+                              Update Delivery Status
+                            </Button>
                           </div>
                         )}
 
@@ -388,6 +426,15 @@ export default function AgentDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Delivery Update Modal */}
+      {showDeliveryModal && selectedDelivery && (
+        <DeliveryUpdateModal
+          delivery={selectedDelivery}
+          onClose={handleCloseDeliveryModal}
+          onUpdate={handleDeliveryUpdate}
+        />
+      )}
     </div>
   );
 }

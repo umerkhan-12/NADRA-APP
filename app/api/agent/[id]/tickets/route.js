@@ -11,13 +11,54 @@ export async function GET(req, context) {
   }
 
   try {
+    // ✅ OPTIMIZED: Use select to only fetch needed fields
     const tickets = await prisma.ticket.findMany({
       where: { agentId: agentId }, 
-      include: {
-        user: true,
-        service: true,
-        documents: true,
-        delivery: true,
+      select: {
+        id: true,
+        status: true,
+        queuePosition: true,
+        customerPriority: true,
+        createdAt: true,
+        closedAt: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true
+          }
+        },
+        service: {
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            fee: true
+          }
+        },
+        documents: {
+          select: {
+            id: true,
+            filePath: true,
+            fileType: true,
+            uploadedAt: true
+          }
+        },
+        delivery: {
+          select: {
+            id: true,
+            status: true,
+            trackingNumber: true,
+            address: true,
+            city: true,
+            phone: true,
+            agentName: true,
+            agentPhone: true,
+            estimatedDelivery: true,
+            notes: true
+          }
+        }
       },
       orderBy: { createdAt: "desc" },
     });
