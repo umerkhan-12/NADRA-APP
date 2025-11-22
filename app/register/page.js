@@ -30,7 +30,7 @@ export default function RegisterPage() {
     e.preventDefault();
     setLoading(true);
 
-    const loadingToast = toast.loading("Sending OTP to your phone...");
+    const loadingToast = toast.loading("Sending OTP to your email...");
 
     const res = await fetch("/api/auth/send-otp-sms", {
       method: "POST",
@@ -42,7 +42,7 @@ export default function RegisterPage() {
     setLoading(false);
 
     if (data.success) {
-      toast.success("OTP sent! Check your phone.", { id: loadingToast });
+      toast.success("OTP sent! Check your email.", { id: loadingToast });
       setOtpSent(true);
     } else {
       toast.error(data.error || "Failed to send OTP", { id: loadingToast });
@@ -58,7 +58,7 @@ export default function RegisterPage() {
     const res = await fetch("/api/auth/verify-otp-sms", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ phone: form.phone, otp }),
+      body: JSON.stringify({ email: form.email, otp }),
     });
 
     const data = await res.json();
@@ -124,7 +124,7 @@ export default function RegisterPage() {
                   Create Account
                 </CardTitle>
                 <CardDescription className="text-white/90 text-sm">
-                  {otpSent ? "Verify your phone number" : "Register as a citizen"}
+                  {otpSent ? "Verify your email" : "Register as a citizen"}
                 </CardDescription>
               </div>
             </div>
@@ -166,18 +166,17 @@ export default function RegisterPage() {
                   {/* Phone Number */}
                   <div className="space-y-2">
                     <Label className="text-white font-semibold text-sm flex items-center gap-2">
-                      <Phone className="h-4 w-4" /> Phone Number
+                      <Phone className="h-4 w-4" /> Phone Number (Optional)
                     </Label>
                     <Input
                       placeholder="+923001234567"
                       className="bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:ring-2 focus:ring-white/50 h-10 rounded-xl backdrop-blur-sm"
-                      required
                       value={form.phone}
                       onChange={(e) =>
                         setForm({ ...form, phone: e.target.value })
                       }
                     />
-                    <p className="text-white/60 text-xs">Format: +92XXXXXXXXXX</p>
+                    <p className="text-white/60 text-xs">Optional: For SMS notifications</p>
                   </div>
 
                   {/* CNIC */}
@@ -227,7 +226,7 @@ export default function RegisterPage() {
                       </span>
                     ) : (
                       <span className="flex items-center gap-2">
-                        <Phone className="w-5 h-5" />
+                        <Mail className="w-5 h-5" />
                         Send OTP
                         <ArrowRight className="w-5 h-5" />
                       </span>
@@ -252,11 +251,11 @@ export default function RegisterPage() {
                   {/* OTP Info Card */}
                   <div className="bg-emerald-500/20 border border-emerald-500/30 rounded-xl p-3">
                     <div className="flex items-start gap-3">
-                      <Phone className="w-5 h-5 text-emerald-300 mt-0.5" />
+                      <Mail className="w-5 h-5 text-emerald-300 mt-0.5" />
                       <div>
                         <p className="text-white font-semibold text-sm">OTP Sent!</p>
                         <p className="text-white/80 text-xs mt-1">
-                          We've sent a 6-digit code to <span className="font-semibold">{form.phone}</span>
+                          We've sent a 6-digit code to <span className="font-semibold">{form.email}</span>
                         </p>
                       </div>
                     </div>

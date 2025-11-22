@@ -4,19 +4,19 @@ import bcrypt from "bcryptjs";
 
 export async function POST(req) {
   try {
-    const { phone, otp } = await req.json();
+    const { email, otp } = await req.json();
 
-    if (!phone || !otp) {
+    if (!email || !otp) {
       return NextResponse.json(
-        { error: "Phone number and OTP are required" },
+        { error: "Email and OTP are required" },
         { status: 400 }
       );
     }
 
     // Find the OTP record
-    const otpRecord = await prisma.oTP.findFirst({
+    const otpRecord = await prisma.OTP.findFirst({
       where: {
-        phoneNumber: phone,
+        email,
         code: otp,
         verified: false,
       },
@@ -34,7 +34,7 @@ export async function POST(req) {
 
     // Check if OTP is expired
     if (new Date() > otpRecord.expiresAt) {
-      await prisma.oTP.delete({
+      await prisma.OTP.delete({
         where: { id: otpRecord.id },
       });
       return NextResponse.json(
@@ -62,7 +62,7 @@ export async function POST(req) {
       data: {
         name: userData.name,
         email: userData.email,
-        phone: phone,
+        phone: userData.phone || null,
         password: hashedPassword,
         cnic: userData.cnic,
         role: "USER",
@@ -70,15 +70,15 @@ export async function POST(req) {
     });
 
     // Mark OTP as verified
-    await prisma.oTP.update({
+    await prisma.OTP.update({
       where: { id: otpRecord.id },
       data: { verified: true },
     });
 
-    // Delete old OTPs for this phone number
-    await prisma.oTP.deleteMany({
+    // Delete old OTPs for this email
+    await prisma.OTP.deleteMany({
       where: {
-        phoneNumber: phone,
+        email,
         id: { not: otpRecord.id },
       },
     });
@@ -99,7 +99,7 @@ export async function POST(req) {
     
     if (error.code === "P2002") {
       return NextResponse.json(
-        { error: "User with this email, phone, or CNIC already exists" },
+        { error: "User with this email or CNIC already exists" },
         { status: 400 }
       );
     }
