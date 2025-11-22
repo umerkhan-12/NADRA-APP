@@ -54,6 +54,11 @@ export async function POST(req) {
     const otp = generateOTP();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
+    // Delete any existing OTPs for this email
+    await prisma.OTP.deleteMany({
+      where: { email },
+    });
+
     // Store OTP in database
     await prisma.OTP.create({
       data: {
