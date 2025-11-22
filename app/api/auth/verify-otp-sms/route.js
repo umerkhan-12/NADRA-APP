@@ -25,6 +25,8 @@ export async function POST(req) {
       },
     });
 
+    console.log("OTP Record found:", otpRecord);
+
     if (!otpRecord) {
       return NextResponse.json(
         { error: "Invalid OTP" },
@@ -33,7 +35,13 @@ export async function POST(req) {
     }
 
     // Check if OTP is expired
-    if (new Date() > new Date(otpRecord.expiresAt)) {
+    const now = new Date();
+    const expires = new Date(otpRecord.expiresAt);
+    console.log("Current time:", now.toISOString());
+    console.log("Expires at:", expires.toISOString());
+    console.log("Is expired?", now > expires);
+    
+    if (now > expires) {
       await prisma.OTP.delete({
         where: { id: otpRecord.id },
       });
