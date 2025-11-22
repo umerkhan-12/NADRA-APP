@@ -799,7 +799,7 @@ return (
                           )}
 
                           {/* Upload Document Button */}
-                          <div className="mt-2">
+                          <div className="mt-2 space-y-2">
                             <label
                               htmlFor={`file-upload-${t.id}`}
                               className="flex items-center justify-center gap-2 w-full px-4 py-2 bg-white border-2 border-dashed border-gray-300 rounded-lg hover:border-emerald-500 hover:bg-emerald-50 transition-all cursor-pointer"
@@ -817,9 +817,19 @@ return (
                               onChange={(e) => handleDocumentUpload(t.id, e)}
                               disabled={uploadingFile}
                             />
-                            <p className="text-xs text-gray-500 mt-1 text-center">
+                            <p className="text-xs text-gray-500 text-center">
                               PDF, JPG, PNG, DOC (Max 5MB)
                             </p>
+                            
+                            {/* View Receipt Button */}
+                            <Button
+                              onClick={() => router.push(`/USER/receipt/${t.id}`)}
+                              className="w-full bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 text-white"
+                              size="sm"
+                            >
+                              <FileText className="h-4 w-4 mr-2" />
+                              View Receipt
+                            </Button>
                           </div>
                         </div>
                       </CardContent>
