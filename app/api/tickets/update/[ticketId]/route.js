@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { Resend } from "resend";
+import nodemailer from "nodemailer";
 
 export async function PATCH(req, context) {
   const params = await context.params;
@@ -23,10 +23,16 @@ export async function PATCH(req, context) {
     if (status === "COMPLETED") { 
       setImmediate(async () => {
         try {
-          const resend = new Resend(process.env.RESEND_API_KEY);
+          const transporter = nodemailer.createTransport({
+            service: "gmail",
+            auth: {
+              user: process.env.EMAIL_USER,
+              pass: process.env.EMAIL_PASS,
+            },
+          });
           
-          await resend.emails.send({
-            from: "NADRA System <onboarding@resend.dev>",
+          await transporter.sendMail({
+            from: process.env.EMAIL_USER,
             to: updated.user.email,
             subject: `Ticket #${updated.id} Completed`,
             html: `
@@ -114,10 +120,16 @@ export async function PATCH(req, context) {
     if (autoAssigned) {
       setImmediate(async () => {
         try {
-          const resend = new Resend(process.env.RESEND_API_KEY);
+          const transporter = nodemailer.createTransport({
+            service: "gmail",
+            auth: {
+              user: process.env.EMAIL_USER,
+              pass: process.env.EMAIL_PASS,
+            },
+          });
 
-          await resend.emails.send({
-            from: "NADRA System <onboarding@resend.dev>",
+          await transporter.sendMail({
+            from: process.env.EMAIL_USER,
             to: autoAssigned.user.email,
             subject: `Ticket #${autoAssigned.id} Assigned`,
             html: `

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { Resend } from "resend";
+import nodemailer from "nodemailer";
 
 // Generate 6-digit OTP
 function generateOTP() {
@@ -71,22 +71,18 @@ export async function POST(req) {
       },
     });
 
-    // Send email using Resend
-    const resendApiKey = process.env.RESEND_API_KEY;
-
-    if (!resendApiKey) {
-      console.error("Resend API key not configured");
-      return NextResponse.json(
-        { error: "Email service not configured. Please contact administrator." },
-        { status: 500 }
-      );
-    }
-
-    const resend = new Resend(resendApiKey);
-
+    // Send email using nodemailer
     try {
-      const result = await resend.emails.send({
-        from: "NADRA System <onboarding@resend.dev>",
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS,
+        },
+      });
+
+      await transporter.sendMail({
+        from: process.env.EMAIL_USER,
         to: email,
         subject: "Your NADRA Verification Code",
         html: `
@@ -105,19 +101,12 @@ export async function POST(req) {
         `,
       });
 
-      console.log("OTP email sent successfully:", result);
-
       return NextResponse.json({
         success: true,
         message: "OTP sent successfully to your email",
       });
-    } catch (resendError) {
-      console.error("Resend email error:", resendError);
-      console.error("Error details:", {
-        message: resendError.message,
-        statusCode: resendError.statusCode,
-        name: resendError.name
-      });
+    } catch (emailError) {
+      console.error("Email sending error:", emailError);
       
       // Delete the OTP since we couldn't send it
       await prisma.OTP.deleteMany({
@@ -125,7 +114,7 @@ export async function POST(req) {
       });
 
       return NextResponse.json(
-        { error: `Failed to send email: ${resendError.message || 'Unknown error'}` },
+        { error: "Failed to send email. Please try again." },
         { status: 500 }
       );
     }
