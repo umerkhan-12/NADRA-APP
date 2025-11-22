@@ -85,7 +85,7 @@ export async function POST(req) {
     const resend = new Resend(resendApiKey);
 
     try {
-      await resend.emails.send({
+      const result = await resend.emails.send({
         from: "NADRA System <onboarding@resend.dev>",
         to: email,
         subject: "Your NADRA Verification Code",
@@ -105,12 +105,19 @@ export async function POST(req) {
         `,
       });
 
+      console.log("OTP email sent successfully:", result);
+
       return NextResponse.json({
         success: true,
         message: "OTP sent successfully to your email",
       });
     } catch (resendError) {
       console.error("Resend email error:", resendError);
+      console.error("Error details:", {
+        message: resendError.message,
+        statusCode: resendError.statusCode,
+        name: resendError.name
+      });
       
       // Delete the OTP since we couldn't send it
       await prisma.OTP.deleteMany({
@@ -118,7 +125,7 @@ export async function POST(req) {
       });
 
       return NextResponse.json(
-        { error: "Failed to send email. Please check your email address." },
+        { error: `Failed to send email: ${resendError.message || 'Unknown error'}` },
         { status: 500 }
       );
     }
