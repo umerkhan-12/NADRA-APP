@@ -61,7 +61,7 @@ export async function POST(req) {
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
     // Store OTP in database
-    await prisma.oTP.create({
+    await prisma.OTP.create({
       data: {
         phoneNumber: phone,
         code: otp,
