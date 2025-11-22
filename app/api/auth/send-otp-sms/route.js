@@ -58,6 +58,7 @@ export async function POST(req) {
     await prisma.OTP.create({
       data: {
         email,
+        phoneNumber: phone || "", // Include phone field to satisfy database constraint
         code: otp,
         expiresAt,
         verified: false,
