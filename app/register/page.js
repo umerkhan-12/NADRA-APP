@@ -117,7 +117,7 @@ export default function RegisterPage() {
         }}
       />
 
-      <div className="min-h-screen w-full flex items-center justify-center relative overflow-hidden bg-linear-to-br from-emerald-900 via-teal-900 to-cyan-900">
+      <div className="min-h-screen w-full flex items-center justify-center relative overflow-hidden bg-gradient-to-br from-emerald-900 via-teal-900 to-cyan-900">
         {/* Animated Background Elements */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute top-20 -right-20 w-72 h-72 bg-emerald-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
@@ -129,7 +129,7 @@ export default function RegisterPage() {
         <div className="relative z-10 w-full max-w-md px-4">
           <Card className="shadow-2xl border-white/20 bg-white/10 backdrop-blur-2xl rounded-3xl overflow-hidden">
             {/* Header */}
-            <div className="bg-linear-to-br from-emerald-600 to-teal-600 p-5 text-center relative overflow-hidden">
+            <div className="bg-gradient-to-br from-emerald-600 to-teal-600 p-5 text-center relative overflow-hidden">
               <div className="absolute inset-0 bg-black/10"></div>
               <div className="relative z-10">
                 <div className="mx-auto mb-3 w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center shadow-xl border-4 border-white/30">
@@ -231,7 +231,7 @@ export default function RegisterPage() {
                   <Button
                     type="submit"
                     disabled={loading}
-                    className="w-full h-10 text-base font-semibold rounded-xl bg-linear-to-br from-emerald-600 to-teal-600 hover:shadow-2xl hover:scale-105 transition-all duration-300 shadow-lg text-white border-0"
+                    className="w-full h-10 text-base font-semibold rounded-xl bg-gradient-to-br from-emerald-600 to-teal-600 hover:shadow-2xl hover:scale-105 transition-all duration-300 shadow-lg text-white border-0"
                   >
                     {loading ? (
                       <span className="flex items-center gap-2">
@@ -294,7 +294,7 @@ export default function RegisterPage() {
                   <Button
                     type="submit"
                     disabled={loading || otp.length !== 6}
-                    className="w-full h-10 text-base font-semibold rounded-xl bg-linear-to-br from-green-600 to-emerald-600 hover:shadow-2xl hover:scale-105 transition-all duration-300 shadow-lg text-white border-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full h-10 text-base font-semibold rounded-xl bg-gradient-to-br from-green-600 to-emerald-600 hover:shadow-2xl hover:scale-105 transition-all duration-300 shadow-lg text-white border-0 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {loading ? (
                       <span className="flex items-center gap-2">

@@ -130,7 +130,7 @@ export default function LoginPage() {
         }}
       />
       
-      <div className="min-h-screen w-full flex items-center justify-center relative overflow-hidden bg-linear-to-br from-slate-900 via-purple-900 to-slate-900">
+      <div className="min-h-screen w-full flex items-center justify-center relative overflow-hidden bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
         {/* Animated Background Elements */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
@@ -142,7 +142,7 @@ export default function LoginPage() {
         <div className="relative z-10 w-full max-w-md px-4">
           <Card className="shadow-2xl border-white/20 bg-white/10 backdrop-blur-2xl rounded-3xl overflow-hidden">
             {/* Header with Gradient */}
-            <div className={`bg-linear-to-br ${getRoleColor()} p-6 text-center relative overflow-hidden`}>
+            <div className={`bg-gradient-to-br ${getRoleColor()} p-6 text-center relative overflow-hidden`}>
               <div className="absolute inset-0 bg-black/10"></div>
               <div className="relative z-10">
                 <div className="mx-auto mb-3 w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center shadow-xl border-4 border-white/30">
@@ -245,7 +245,7 @@ export default function LoginPage() {
                 <Button
                   type="submit"
                   disabled={loading}
-                  className={`w-full h-11 text-base font-semibold rounded-xl bg-linear-to-br ${getRoleColor()} hover:shadow-2xl hover:scale-105 transition-all duration-300 shadow-lg text-white border-0`}
+                  className={`w-full h-11 text-base font-semibold rounded-xl bg-gradient-to-br ${getRoleColor()} hover:shadow-2xl hover:scale-105 transition-all duration-300 shadow-lg text-white border-0`}
                 >
                   {loading ? (
                     <span className="flex items-center gap-2">
