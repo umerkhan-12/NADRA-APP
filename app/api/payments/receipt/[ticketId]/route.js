@@ -6,9 +6,11 @@ export async function GET(req, context) {
     const params = await context.params;
     const ticketId = parseInt(params.ticketId, 10);
 
-    if (!ticketId) {
+    console.log("Receipt API - Fetching for ticket ID:", ticketId); // Debug log
+
+    if (!ticketId || isNaN(ticketId)) {
       return NextResponse.json(
-        { error: "Invalid ticket ID" },
+        { success: false, error: "Invalid ticket ID" },
         { status: 400 }
       );
     }
@@ -40,9 +42,11 @@ export async function GET(req, context) {
       },
     });
 
+    console.log("Payment found:", payment ? "Yes" : "No"); // Debug log
+
     if (!payment) {
       return NextResponse.json(
-        { error: "Receipt not found" },
+        { success: false, error: "Receipt not found for this ticket" },
         { status: 404 }
       );
     }
@@ -54,7 +58,7 @@ export async function GET(req, context) {
   } catch (error) {
     console.error("Receipt fetch error:", error);
     return NextResponse.json(
-      { error: "Failed to fetch receipt" },
+      { success: false, error: error.message || "Failed to fetch receipt" },
       { status: 500 }
     );
   }
