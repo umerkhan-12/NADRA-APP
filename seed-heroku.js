@@ -39,7 +39,100 @@ async function main() {
     }
   }
 
-  // 2. Create Admin User
+  // 2. Create Required Documents for Services
+  console.log('\n📄 Creating required documents for services...');
+  
+  const requiredDocuments = [
+    // New CNIC Registration
+    { serviceName: 'New CNIC Registration', documentName: 'Birth Certificate', description: 'Original birth certificate or hospital certificate', isMandatory: true },
+    { serviceName: 'New CNIC Registration', documentName: 'Family Registration Certificate (B-Form)', description: 'Valid B-Form for minors', isMandatory: true },
+    { serviceName: 'New CNIC Registration', documentName: 'Parent CNIC', description: 'Copy of parent/guardian CNIC', isMandatory: true },
+    
+    // CNIC Renewal
+    { serviceName: 'CNIC Renewal', documentName: 'Expired CNIC', description: 'Original expired CNIC card', isMandatory: true },
+    { serviceName: 'CNIC Renewal', documentName: 'Proof of Address', description: 'Utility bill or rental agreement', isMandatory: false },
+    
+    // CNIC Correction
+    { serviceName: 'CNIC Correction', documentName: 'Current CNIC', description: 'Original CNIC to be corrected', isMandatory: true },
+    { serviceName: 'CNIC Correction', documentName: 'Supporting Documents', description: 'Birth certificate, school certificate, or affidavit for corrections', isMandatory: true },
+    
+    // Lost CNIC Replacement
+    { serviceName: 'Lost CNIC Replacement', documentName: 'FIR or Lost Report', description: 'Police report for lost CNIC', isMandatory: true },
+    { serviceName: 'Lost CNIC Replacement', documentName: 'Affidavit', description: 'Sworn affidavit for lost CNIC', isMandatory: true },
+    
+    // Urgent CNIC Processing
+    { serviceName: 'Urgent CNIC Processing', documentName: 'Required Documents', description: 'All documents as per service type (new/renewal/correction)', isMandatory: true },
+    { serviceName: 'Urgent CNIC Processing', documentName: 'Urgency Proof', description: 'Travel tickets, medical emergency, or official letter', isMandatory: true },
+    
+    // Family Registration Certificate (FRC)
+    { serviceName: 'Family Registration Certificate (FRC)', documentName: 'CNIC of Head', description: 'Valid CNIC of family head', isMandatory: true },
+    { serviceName: 'Family Registration Certificate (FRC)', documentName: 'Marriage Certificate', description: 'Valid marriage certificate (Nikahnama)', isMandatory: true },
+    { serviceName: 'Family Registration Certificate (FRC)', documentName: 'Children Birth Certificates', description: 'Birth certificates of all children', isMandatory: false },
+    
+    // Birth Certificate Issuance
+    { serviceName: 'Birth Certificate Issuance', documentName: 'Hospital Certificate', description: 'Original hospital birth certificate', isMandatory: true },
+    { serviceName: 'Birth Certificate Issuance', documentName: 'Parents CNIC', description: 'Copy of both parents CNIC', isMandatory: true },
+    { serviceName: 'Birth Certificate Issuance', documentName: 'Marriage Certificate', description: 'Valid marriage certificate', isMandatory: false },
+    
+    // Marriage Certificate Issuance
+    { serviceName: 'Marriage Certificate Issuance', documentName: 'Nikahnama', description: 'Original Nikahnama (marriage contract)', isMandatory: true },
+    { serviceName: 'Marriage Certificate Issuance', documentName: 'CNICs', description: 'Copy of both spouses CNIC', isMandatory: true },
+    { serviceName: 'Marriage Certificate Issuance', documentName: 'Witnesses CNIC', description: 'Copy of witnesses CNIC', isMandatory: true },
+    
+    // Death Certificate Issuance
+    { serviceName: 'Death Certificate Issuance', documentName: 'Death Report', description: 'Hospital death certificate or medical report', isMandatory: true },
+    { serviceName: 'Death Certificate Issuance', documentName: 'Deceased CNIC', description: 'Copy of deceased person CNIC', isMandatory: true },
+    { serviceName: 'Death Certificate Issuance', documentName: 'Applicant CNIC', description: 'CNIC of person applying (family member)', isMandatory: true },
+    
+    // Document Verification
+    { serviceName: 'Document Verification', documentName: 'Original Documents', description: 'Original documents to be verified', isMandatory: true },
+    { serviceName: 'Document Verification', documentName: 'Applicant CNIC', description: 'Valid CNIC of applicant', isMandatory: true },
+    
+    // Passport Issuance
+    { serviceName: 'Passport Issuance', documentName: 'Valid CNIC', description: 'Valid CNIC (must not be expired)', isMandatory: true },
+    { serviceName: 'Passport Issuance', documentName: 'Passport Size Photos', description: '4 recent passport size photographs (blue background)', isMandatory: true },
+    { serviceName: 'Passport Issuance', documentName: 'Old Passport', description: 'Old passport if renewal', isMandatory: false },
+    
+    // Urgent Passport Issuance
+    { serviceName: 'Urgent Passport Issuance', documentName: 'Valid CNIC', description: 'Valid CNIC (must not be expired)', isMandatory: true },
+    { serviceName: 'Urgent Passport Issuance', documentName: 'Passport Size Photos', description: '4 recent passport size photographs (blue background)', isMandatory: true },
+    { serviceName: 'Urgent Passport Issuance', documentName: 'Travel Documents', description: 'Confirmed flight tickets or visa', isMandatory: true },
+    
+    // Residence Certificate
+    { serviceName: 'Residence Certificate', documentName: 'Valid CNIC', description: 'Valid CNIC showing current address', isMandatory: true },
+    { serviceName: 'Residence Certificate', documentName: 'Proof of Residence', description: 'Utility bill, rental agreement, or property documents', isMandatory: true },
+  ];
+
+  let documentsCreated = 0;
+  for (const doc of requiredDocuments) {
+    const service = await prisma.service.findFirst({
+      where: { name: doc.serviceName }
+    });
+    
+    if (service) {
+      const existing = await prisma.requiredDocument.findFirst({
+        where: {
+          serviceId: service.id,
+          documentName: doc.documentName
+        }
+      });
+      
+      if (!existing) {
+        await prisma.requiredDocument.create({
+          data: {
+            serviceId: service.id,
+            documentName: doc.documentName,
+            description: doc.description,
+            isMandatory: doc.isMandatory
+          }
+        });
+        documentsCreated++;
+      }
+    }
+  }
+  console.log(`✅ Created ${documentsCreated} required documents`);
+
+  // 3. Create Admin User
   console.log('\n👤 Creating admin user...');
   
   const adminEmail = 'admin@nadra.gov.pk';
@@ -71,7 +164,7 @@ async function main() {
     console.log('⏭️  Admin already exists');
   }
 
-  // 3. Create Sample Agent
+  // 4. Create Sample Agent
   console.log('\n🕵️  Creating sample agent...');
   
   const agentUsername = 'agent1';
