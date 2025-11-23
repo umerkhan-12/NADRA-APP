@@ -68,36 +68,63 @@ export async function POST(req) {
       });
     }
 
+    // Generate 6-digit OTP
     const code = Math.floor(100000 + Math.random() * 900000).toString();
+    
+    // Set expiration time (10 minutes from now)
+    const expireAt = new Date(Date.now() + 10 * 60 * 1000);
 
+    // Delete any existing OTPs for this email
+    await prisma.OTP.deleteMany({ where: { email } });
+
+    // Create new OTP with expiration
     await prisma.OTP.create({
-      data: { email, code },
+      data: { 
+        email, 
+        code,
+        expireat: expireAt
+      },
     });
 
     // Email Transporter
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
-        user: process.env.EMAIL_USER,  // <-- MUST MATCH YOUR .env
-        pass: process.env.EMAIL_PASS,  // <-- APP PASSWORD ONLY
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
       },
     });
 
     // Send OTP Email
     await transporter.sendMail({
-      from: `"NADRA Services" <${process.env.EMAIL_USER}>`,
+      from: `"NADRA Citizen Portal" <${process.env.EMAIL_USER}>`,
       to: email,
-      subject: "Your OTP Code",
+      subject: "NADRA Account Verification",
       html: `
-        <h2>Your OTP Code</h2>
-        <p style="font-size: 18px; letter-spacing: 2px;"><strong>${code}</strong></p>
-        <p>This OTP will expire in 5 minutes.</p>
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #1e3c72;">NADRA Account Verification</h2>
+          <p>Hello,</p>
+          <p>Your verification code is:</p>
+          <div style="background: #f0f0f0; padding: 20px; text-align: center; font-size: 32px; letter-spacing: 5px; color: #1e3c72; font-weight: bold; margin: 20px 0;">
+            ${code}
+          </div>
+          <p>This code will expire in <strong>10 minutes</strong>.</p>
+          <p>If you didn't request this code, please ignore this email.</p>
+          <hr style="margin: 30px 0;">
+          <p style="color: #666; font-size: 12px;">This is an automated message from NADRA Citizen Portal.</p>
+        </div>
       `,
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ 
+      success: true,
+      message: "OTP sent successfully to your email"
+    });
   } catch (err) {
     console.error("OTP Email Error:", err);
-    return NextResponse.json({ success: false, error: err.message });
+    return NextResponse.json({ 
+      success: false, 
+      error: "Failed to send OTP. Please try again."
+    });
   }
 }
