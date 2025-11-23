@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Chatbot from "@/components/Chatbot";
+import VisitorTracker from "@/components/VisitorTracker";
 
 export default function Home() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -665,6 +666,9 @@ export default function Home() {
 
       {/* AI Chatbot */}
       <Chatbot />
+      
+      {/* Visitor Tracker */}
+      <VisitorTracker page="home" />
     </div>
   );
 }

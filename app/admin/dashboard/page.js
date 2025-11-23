@@ -47,6 +47,7 @@ export default function AdminDashboard() {
   const [payments, setPayments] = useState([]);
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [visitorStats, setVisitorStats] = useState(null);
 
   // Agent creation state
   const [agentName, setAgentName] = useState("");
@@ -97,14 +98,15 @@ export default function AdminDashboard() {
           paymentsRes,
           logsRes,
           agentsRes,
-
+          visitorRes,
         ] = await Promise.all([
           fetchJSON("/api/admin/tickets"),
           fetchJSON("/api/admin/users"),
           fetchJSON("/api/admin/services"),
           fetchJSON("/api/admin/payments"),
           fetchJSON("/api/admin/logs"),
-          fetchJSON("/api/admin/agents"), // fetch agents
+          fetchJSON("/api/admin/agents"),
+          fetchJSON("/api/visitor"),
         ]);
 
         if (JSON.stringify(tickets) !== JSON.stringify(ticketsRes?.tickets)) {
@@ -128,6 +130,9 @@ export default function AdminDashboard() {
         }
         if (JSON.stringify(agents) !== JSON.stringify(agentsRes?.agents)) {
           setAgents(agentsRes?.agents || []);
+        }
+        if (JSON.stringify(visitorStats) !== JSON.stringify(visitorRes)) {
+          setVisitorStats(visitorRes);
         }
       } catch (err) {
         console.error("Refresh failed:", err);
@@ -316,6 +321,55 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Visitor Statistics */}
+        {visitorStats && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Card className="bg-linear-to-br from-cyan-500 to-cyan-600 border-none text-white hover:shadow-2xl hover:scale-105 transition-all duration-300">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-semibold">Total Visitors</CardTitle>
+                <Users className="h-5 w-5 opacity-80" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold">{visitorStats.totalVisitors || 0}</div>
+                <p className="text-xs text-cyan-100 mt-1">All time visits</p>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-linear-to-br from-teal-500 to-teal-600 border-none text-white hover:shadow-2xl hover:scale-105 transition-all duration-300">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-semibold">Unique Visitors</CardTitle>
+                <UserCheck className="h-5 w-5 opacity-80" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold">{visitorStats.uniqueVisitors || 0}</div>
+                <p className="text-xs text-teal-100 mt-1">Unique IP addresses</p>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-linear-to-br from-pink-500 to-pink-600 border-none text-white hover:shadow-2xl hover:scale-105 transition-all duration-300">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-semibold">Today's Visitors</CardTitle>
+                <Activity className="h-5 w-5 opacity-80" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold">{visitorStats.todayVisitors || 0}</div>
+                <p className="text-xs text-pink-100 mt-1">Visits today</p>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-linear-to-br from-indigo-500 to-indigo-600 border-none text-white hover:shadow-2xl hover:scale-105 transition-all duration-300">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-semibold">This Week</CardTitle>
+                <TrendingUp className="h-5 w-5 opacity-80" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold">{visitorStats.weekVisitors || 0}</div>
+                <p className="text-xs text-indigo-100 mt-1">Last 7 days</p>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         {/* Create Agent Form */}
         <Card className="bg-white/95 backdrop-blur border-purple-200 shadow-xl hover:shadow-2xl transition-shadow">
