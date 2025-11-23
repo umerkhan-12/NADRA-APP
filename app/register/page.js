@@ -32,10 +32,15 @@ export default function RegisterPage() {
 
     const loadingToast = toast.loading("Sending OTP to your email...");
 
-    const res = await fetch("/api/auth/send-otp-sms", {
+    const res = await fetch("/api/auth/send-otp", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
+      body: JSON.stringify({
+        name: form.name,
+        email: form.email,
+        phone: form.phone,
+        password: form.password,
+      }),
     });
 
     const data = await res.json();
@@ -46,6 +51,13 @@ export default function RegisterPage() {
       setOtpSent(true);
     } else {
       toast.error(data.error || "Failed to send OTP", { id: loadingToast });
+      
+      // Redirect to login if user already exists
+      if (data.redirect === "/login") {
+        setTimeout(() => {
+          window.location.href = "/login";
+        }, 2000);
+      }
     }
   }
 
@@ -55,10 +67,13 @@ export default function RegisterPage() {
 
     const loadingToast = toast.loading("Verifying OTP and creating account...");
 
-    const res = await fetch("/api/auth/verify-otp-sms", {
+    const res = await fetch("/api/auth/verify-otp", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: form.email, otp }),
+      body: JSON.stringify({ 
+        email: form.email,
+        otp 
+      }),
     });
 
     const data = await res.json();

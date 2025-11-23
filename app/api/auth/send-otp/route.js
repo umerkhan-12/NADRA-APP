@@ -53,7 +53,15 @@ import nodemailer from "nodemailer";
 
 export async function POST(req) {
   try {
-    const { email } = await req.json();
+    const { name, email, phone, password } = await req.json();
+
+    // Validate required fields
+    if (!email || !name || !password) {
+      return NextResponse.json({
+        success: false,
+        error: "Name, email and password are required",
+      });
+    }
 
     // Check if user already exists
     const existingUser = await prisma.user.findFirst({
@@ -64,7 +72,7 @@ export async function POST(req) {
       return NextResponse.json({
         success: false,
         error: "This email is already registered. Please login.",
-        redirect: "/login", // <-- FRONTEND WILL HANDLE THIS
+        redirect: "/login",
       });
     }
 
@@ -77,12 +85,21 @@ export async function POST(req) {
     // Delete any existing OTPs for this email
     await prisma.OTP.deleteMany({ where: { email } });
 
+    // Store user data in metaData field for later use
+    const metaData = JSON.stringify({
+      name,
+      email,
+      phone: phone || null,
+      password, // Will be hashed during verification
+    });
+
     // Create new OTP with expiration
     await prisma.OTP.create({
       data: { 
         email, 
         code,
-        expireat: expireAt
+        expireat: expireAt,
+        metaData
       },
     });
 
@@ -103,7 +120,7 @@ export async function POST(req) {
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2 style="color: #1e3c72;">NADRA Account Verification</h2>
-          <p>Hello,</p>
+          <p>Hello ${name},</p>
           <p>Your verification code is:</p>
           <div style="background: #f0f0f0; padding: 20px; text-align: center; font-size: 32px; letter-spacing: 5px; color: #1e3c72; font-weight: bold; margin: 20px 0;">
             ${code}

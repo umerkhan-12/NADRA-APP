@@ -4,39 +4,59 @@ import bcrypt from "bcryptjs";
 
 export async function POST(req) {
   try {
-    const { name, email, phone, password, otp } = await req.json();
+    const { email, otp } = await req.json();
 
-    // Verify OTP
-    const check = await prisma.OTP.findFirst({
+    // Find the OTP record
+    const otpRecord = await prisma.OTP.findFirst({
       where: { email, code: otp }
     });
 
-    if (!check) {
-      return NextResponse.json({ success: false, error: "Invalid OTP code" });
+    if (!otpRecord) {
+      return NextResponse.json({ 
+        success: false, 
+        error: "Invalid OTP code" 
+      });
     }
 
     // Check if OTP is expired
-    if (check.expireat && new Date() > new Date(check.expireat)) {
+    if (otpRecord.expireat && new Date() > new Date(otpRecord.expireat)) {
       await prisma.OTP.deleteMany({ where: { email } });
-      return NextResponse.json({ success: false, error: "OTP has expired. Please request a new one." });
+      return NextResponse.json({ 
+        success: false, 
+        error: "OTP has expired. Please request a new one." 
+      });
+    }
+
+    // Parse user data from metaData
+    let userData;
+    try {
+      userData = JSON.parse(otpRecord.metaData || "{}");
+    } catch (err) {
+      return NextResponse.json({ 
+        success: false, 
+        error: "Invalid registration data. Please start over." 
+      });
+    }
+
+    const { name, phone, password } = userData;
+
+    if (!name || !password) {
+      return NextResponse.json({ 
+        success: false, 
+        error: "Missing required registration data. Please start over." 
+      });
     }
 
     // Check if user already exists
     const existingUser = await prisma.user.findFirst({
-      where: { 
-        OR: [
-          { email: email },
-          { cnic: phone } // In case phone was used as CNIC
-        ]
-      }
+      where: { email }
     });
 
     if (existingUser) {
-      // Delete OTP and return error
       await prisma.OTP.deleteMany({ where: { email } });
       return NextResponse.json({ 
         success: false, 
-        error: "This email or CNIC is already registered. Please login instead." 
+        error: "This email is already registered. Please login instead." 
       });
     }
 
@@ -48,7 +68,7 @@ export async function POST(req) {
       data: {
         name,
         email,
-        phone,
+        phone: phone || null,
         password: hashedPassword,
         role: "USER",
         cnic: null,
@@ -69,7 +89,7 @@ export async function POST(req) {
     if (err.code === 'P2002') {
       return NextResponse.json({ 
         success: false, 
-        error: "This email or CNIC is already registered. Please login." 
+        error: "This email is already registered. Please login." 
       });
     }
     
