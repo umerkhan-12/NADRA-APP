@@ -1,5 +1,6 @@
 @startuml NADRA_Use_Case_Diagram
 
+top to bottom direction
 skinparam actorStyle awesome
 skinparam usecaseBorderColor #2196F3
 skinparam usecaseBackgroundColor #E3F2FD
@@ -8,11 +9,15 @@ skinparam actorBorderColor #4CAF50
 title NADRA Citizen Portal - Use Case Diagram
 
 ' ============================================
-' ACTORS
+' ACTORS (Left Side)
 ' ============================================
 actor "Citizen" as Citizen #LightGreen
 actor "Agent" as Agent #LightBlue
 actor "Admin" as Admin #Plum
+
+' ============================================
+' ACTORS (Right Side - External Systems)
+' ============================================
 actor "Email System" as Email #LightGray
 actor "Payment Gateway" as PaymentGW #Gold
 
@@ -21,13 +26,11 @@ actor "Payment Gateway" as PaymentGW #Gold
 ' ============================================
 rectangle "NADRA Citizen Portal System" {
     
-    ' --- Authentication Use Cases ---
     usecase "Register Account" as UC_Register
     usecase "Login" as UC_Login
     usecase "Verify OTP" as UC_VerifyOTP
     usecase "Logout" as UC_Logout
     
-    ' --- Ticket Management Use Cases ---
     usecase "Create Service Ticket" as UC_CreateTicket
     usecase "Upload Documents" as UC_UploadDocs
     usecase "Track Ticket Status" as UC_TrackTicket
@@ -36,18 +39,15 @@ rectangle "NADRA Citizen Portal System" {
     usecase "Assign Ticket to Agent" as UC_AssignTicket
     usecase "Close Ticket" as UC_CloseTicket
     
-    ' --- Payment Use Cases ---
     usecase "Process Payment" as UC_ProcessPayment
     usecase "Select Payment Method" as UC_SelectMethod
     usecase "Generate Receipt" as UC_GenerateReceipt
     usecase "Verify Payment" as UC_VerifyPayment
     
-    ' --- Delivery Use Cases ---
     usecase "Provide Delivery Info" as UC_DeliveryInfo
     usecase "Track Delivery" as UC_TrackDelivery
     usecase "Update Delivery Status" as UC_UpdateDelivery
     
-    ' --- Admin Use Cases ---
     usecase "Manage Users" as UC_ManageUsers
     usecase "Manage Agents" as UC_ManageAgents
     usecase "Manage Services" as UC_ManageServices
@@ -55,7 +55,6 @@ rectangle "NADRA Citizen Portal System" {
     usecase "View System Logs" as UC_ViewLogs
     usecase "Monitor Payments" as UC_MonitorPayments
     
-    ' --- Chatbot Use Case ---
     usecase "Use Chatbot" as UC_Chatbot
 }
 
@@ -101,12 +100,12 @@ Admin --> UC_AssignTicket
 ' ============================================
 ' EXTERNAL SYSTEM ASSOCIATIONS
 ' ============================================
-Email <-- UC_Register : <<sends>>
-Email <-- UC_VerifyOTP : <<sends>>
-Email <-- UC_UpdateTicket : <<notifies>>
-Email <-- UC_UpdateDelivery : <<notifies>>
-PaymentGW <-- UC_ProcessPayment : <<processes>>
-PaymentGW <-- UC_VerifyPayment : <<validates>>
+UC_Register --> Email
+UC_VerifyOTP --> Email
+UC_UpdateTicket --> Email
+UC_UpdateDelivery --> Email
+UC_ProcessPayment --> PaymentGW
+UC_VerifyPayment --> PaymentGW
 
 ' ============================================
 ' USE CASE RELATIONSHIPS (Include/Extend)
@@ -118,68 +117,5 @@ UC_CreateTicket ..> UC_DeliveryInfo : <<extend>>
 UC_ProcessPayment ..> UC_SelectMethod : <<include>>
 UC_ProcessPayment ..> UC_VerifyPayment : <<include>>
 UC_CloseTicket ..> UC_GenerateReceipt : <<include>>
-
-' ============================================
-' BOUNDARY CLASSES (Stereotypes)
-' ============================================
-note right of UC_Login
-  <<boundary>>
-  LoginForm
-  Validates credentials
-end note
-
-note right of UC_CreateTicket
-  <<boundary>>
-  TicketCreationForm
-  Service selection UI
-end note
-
-note right of UC_Dashboard
-  <<boundary>>
-  DashboardView
-  Statistics display
-end note
-
-' ============================================
-' CONTROL CLASSES (Stereotypes)
-' ============================================
-note left of UC_AssignTicket
-  <<control>>
-  TicketController
-  Load balancing algorithm
-end note
-
-note left of UC_ProcessPayment
-  <<control>>
-  PaymentController
-  Idempotency handling
-end note
-
-note left of UC_VerifyOTP
-  <<control>>
-  AuthController
-  Rate limiting logic
-end note
-
-' ============================================
-' ENTITY CLASSES (Stereotypes)
-' ============================================
-note bottom of UC_TrackTicket
-  <<entity>>
-  Ticket, TicketLog
-  Database entities
-end note
-
-note bottom of UC_ManageAgents
-  <<entity>>
-  Agent, User
-  Database entities
-end note
-
-note bottom of UC_ProcessPayment
-  <<entity>>
-  Payment
-  Transaction records
-end note
 
 @enduml
