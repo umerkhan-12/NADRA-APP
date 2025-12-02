@@ -1,8 +1,6 @@
 @startuml NADRA_Use_Case_Diagram
 
-!define ICONURL https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/v2.4.0
 skinparam actorStyle awesome
-skinparam packageStyle rectangle
 skinparam usecaseBorderColor #2196F3
 skinparam usecaseBackgroundColor #E3F2FD
 skinparam actorBorderColor #4CAF50
@@ -12,7 +10,7 @@ title NADRA Citizen Portal - Use Case Diagram
 ' ============================================
 ' ACTORS
 ' ============================================
-actor "Citizen\n(User)" as Citizen #LightGreen
+actor "Citizen" as Citizen #LightGreen
 actor "Agent" as Agent #LightBlue
 actor "Admin" as Admin #Plum
 actor "Email System" as Email #LightGray
@@ -24,48 +22,38 @@ actor "Payment Gateway" as PaymentGW #Gold
 rectangle "NADRA Citizen Portal System" {
     
     ' --- Authentication Use Cases ---
-    package "Authentication Module" {
-        usecase "Register Account" as UC_Register
-        usecase "Login" as UC_Login
-        usecase "Verify OTP" as UC_VerifyOTP
-        usecase "Logout" as UC_Logout
-    }
+    usecase "Register Account" as UC_Register
+    usecase "Login" as UC_Login
+    usecase "Verify OTP" as UC_VerifyOTP
+    usecase "Logout" as UC_Logout
     
     ' --- Ticket Management Use Cases ---
-    package "Ticket Management Module" {
-        usecase "Create Service Ticket" as UC_CreateTicket
-        usecase "Upload Documents" as UC_UploadDocs
-        usecase "Track Ticket Status" as UC_TrackTicket
-        usecase "View Queue Position" as UC_ViewQueue
-        usecase "Update Ticket Status" as UC_UpdateTicket
-        usecase "Assign Ticket to Agent" as UC_AssignTicket
-        usecase "Close Ticket" as UC_CloseTicket
-    }
+    usecase "Create Service Ticket" as UC_CreateTicket
+    usecase "Upload Documents" as UC_UploadDocs
+    usecase "Track Ticket Status" as UC_TrackTicket
+    usecase "View Queue Position" as UC_ViewQueue
+    usecase "Update Ticket Status" as UC_UpdateTicket
+    usecase "Assign Ticket to Agent" as UC_AssignTicket
+    usecase "Close Ticket" as UC_CloseTicket
     
     ' --- Payment Use Cases ---
-    package "Payment Module" {
-        usecase "Process Payment" as UC_ProcessPayment
-        usecase "Select Payment Method" as UC_SelectMethod
-        usecase "Generate Receipt" as UC_GenerateReceipt
-        usecase "Verify Payment" as UC_VerifyPayment
-    }
+    usecase "Process Payment" as UC_ProcessPayment
+    usecase "Select Payment Method" as UC_SelectMethod
+    usecase "Generate Receipt" as UC_GenerateReceipt
+    usecase "Verify Payment" as UC_VerifyPayment
     
     ' --- Delivery Use Cases ---
-    package "Delivery Module" {
-        usecase "Provide Delivery Info" as UC_DeliveryInfo
-        usecase "Track Delivery" as UC_TrackDelivery
-        usecase "Update Delivery Status" as UC_UpdateDelivery
-    }
+    usecase "Provide Delivery Info" as UC_DeliveryInfo
+    usecase "Track Delivery" as UC_TrackDelivery
+    usecase "Update Delivery Status" as UC_UpdateDelivery
     
     ' --- Admin Use Cases ---
-    package "Administration Module" {
-        usecase "Manage Users" as UC_ManageUsers
-        usecase "Manage Agents" as UC_ManageAgents
-        usecase "Manage Services" as UC_ManageServices
-        usecase "View System Dashboard" as UC_Dashboard
-        usecase "View System Logs" as UC_ViewLogs
-        usecase "Monitor Payments" as UC_MonitorPayments
-    }
+    usecase "Manage Users" as UC_ManageUsers
+    usecase "Manage Agents" as UC_ManageAgents
+    usecase "Manage Services" as UC_ManageServices
+    usecase "View System Dashboard" as UC_Dashboard
+    usecase "View System Logs" as UC_ViewLogs
+    usecase "Monitor Payments" as UC_MonitorPayments
     
     ' --- Chatbot Use Case ---
     usecase "Use Chatbot" as UC_Chatbot
