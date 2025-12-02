@@ -1,0 +1,238 @@
+@startuml NADRA_Collaboration_Diagram
+
+skinparam objectBorderColor #2196F3
+skinparam objectBackgroundColor #E3F2FD
+skinparam actorBorderColor #4CAF50
+skinparam noteBorderColor #FF9800
+skinparam arrowColor #37474F
+
+title NADRA Citizen Portal - Collaboration Diagram\nTicket Creation Use Case
+
+' ============================================
+' OBJECTS (PARTICIPANTS)
+' ============================================
+
+object ":Citizen\n<<actor>>" as Citizen #LightGreen {
+}
+
+object "ticketForm:\nTicketCreationForm\n<<boundary>>" as UI #FFCDD2 {
+}
+
+object "ticketController:\nTicketController\n<<control>>" as TC #FFE082 {
+}
+
+object "paymentController:\nPaymentController\n<<control>>" as PC #FFE082 {
+}
+
+object "authController:\nAuthController\n<<control>>" as AC #FFE082 {
+}
+
+object ":Ticket\n<<entity>>" as Ticket #C8E6C9 {
+    id = 123
+    status = IN_PROGRESS
+    queuePosition = 3
+}
+
+object ":Payment\n<<entity>>" as Payment #C8E6C9 {
+    id = 456
+    status = PENDING
+    amount = 500.00
+}
+
+object ":Delivery\n<<entity>>" as Delivery #C8E6C9 {
+    id = 789
+    status = PENDING
+}
+
+object ":TicketLog\n<<entity>>" as Log #C8E6C9 {
+    message = "Created"
+}
+
+object "assignedAgent:\nAgent\n<<entity>>" as Agent #C8E6C9 {
+    id = 2
+    currentTickets = 3
+    maxTickets = 5
+}
+
+object ":Service\n<<entity>>" as Service #C8E6C9 {
+    id = 1
+    fee = 500.00
+    priority = HIGH
+}
+
+object ":UploadedDocument\n<<entity>>" as Doc #C8E6C9 {
+    fileType = "PDF"
+}
+
+object ":EmailService" as Email #BBDEFB {
+}
+
+object ":Database\n(Prisma ORM)" as DB #E1BEE7 {
+}
+
+' ============================================
+' LAYOUT ORGANIZATION
+' ============================================
+
+Citizen -[hidden]right- UI
+UI -[hidden]right- TC
+TC -[hidden]right- PC
+PC -[hidden]down- Ticket
+Ticket -[hidden]right- Payment
+Payment -[hidden]right- Delivery
+Agent -[hidden]right- Service
+
+' ============================================
+' COLLABORATION MESSAGES
+' ============================================
+
+' === Phase 1: Initialization ===
+Citizen --> UI : 1: accessPage()
+UI --> TC : 1.1: loadServices()
+TC --> DB : 1.1.1: findMany(Service)
+DB --> TC : 1.1.2: services[]
+TC --> Service : 1.1.3: getRequiredDocuments()
+
+' === Phase 2: Form Submission ===
+Citizen --> UI : 2: selectService(serviceId)
+Citizen --> UI : 2.1: selectPriority(URGENT)
+Citizen --> UI : 2.2: uploadDocuments(files[])
+UI --> TC : 2.2.1: validateDocuments()
+
+' === Phase 3: Delivery Info ===
+Citizen --> UI : 3: enterDeliveryInfo()
+UI --> TC : 3.1: validateAddress()
+
+' === Phase 4: Ticket Creation (Transaction) ===
+Citizen --> UI : 4: submitTicket()
+UI --> TC : 4.1: createTicket(data)
+
+note bottom of TC
+  **Transaction Start**
+  Atomic operations begin
+end note
+
+' Agent Assignment
+TC --> Agent : 4.1.1: findAvailable()
+Agent --> DB : 4.1.1.1: query(workload)
+DB --> Agent : 4.1.1.2: agentList[]
+Agent --> TC : 4.1.1.3: selectBestAgent()
+
+' Priority Calculation
+TC --> TC : 4.1.2: calculateFinalPriority()
+note right of TC
+  HIGH(1) + URGENT(-10) = -9
+  Lower number = Higher priority
+end note
+
+' Create Ticket Entity
+TC --> Ticket : 4.1.3: create()
+Ticket --> DB : 4.1.3.1: insert()
+DB --> Ticket : 4.1.3.2: ticketId
+
+' Create Payment Entity
+TC --> Payment : 4.1.4: create()
+Payment --> DB : 4.1.4.1: insert()
+DB --> Payment : 4.1.4.2: paymentId
+
+' Create Delivery Entity
+TC --> Delivery : 4.1.5: create()
+Delivery --> DB : 4.1.5.1: insert()
+DB --> Delivery : 4.1.5.2: deliveryId
+
+' Create Log
+TC --> Log : 4.1.6: create("Ticket created")
+Log --> DB : 4.1.6.1: insert()
+
+' Upload Documents
+TC --> Doc : 4.1.7: createDocuments()
+Doc --> DB : 4.1.7.1: insertMany()
+
+' Queue Position
+TC --> DB : 4.1.8: calculatePosition()
+DB --> TC : 4.1.8.1: position = 3
+
+note bottom of TC
+  **Transaction Commit**
+end note
+
+' Email Notification (Async)
+TC --> Email : 4.2: sendTicketEmail()
+note right of Email
+  Asynchronous notification
+  sent to citizen's email
+end note
+
+' Return to UI
+TC --> UI : 4.3: ticketCreated()
+UI --> Citizen : 4.4: displaySummary()
+
+' === Phase 5: Payment Processing ===
+Citizen --> UI : 5: selectPayment(ONLINE)
+UI --> PC : 5.1: processPayment()
+
+' Idempotency Check
+PC --> DB : 5.1.1: checkExistingPayment()
+DB --> PC : 5.1.2: paymentStatus
+
+note right of PC
+  Idempotency protection:
+  Prevents double payments
+end note
+
+' Card Validation
+PC --> PC : 5.2: validateCard()
+
+' Update Payment
+PC --> Payment : 5.3: updateStatus(COMPLETED)
+Payment --> DB : 5.3.1: update()
+DB --> Payment : 5.3.2: confirmed
+
+' Generate Transaction ID
+PC --> PC : 5.4: generateTransactionId()
+note right of PC
+  TXN + timestamp + random
+  Example: TXN1732270800ABC
+end note
+
+' Payment Confirmation Email
+PC --> Email : 5.5: sendPaymentConfirmation()
+PC --> UI : 5.6: paymentSuccess()
+UI --> Citizen : 5.7: displayReceipt()
+
+' === Phase 6: Agent Notification ===
+TC --> Email : 6: sendAgentNotification()
+Email --> Agent : 6.1: emailSent()
+
+' === Phase 7: Queue Tracking ===
+Citizen --> UI : 7: trackQueuePosition()
+UI --> TC : 7.1: getQueuePosition()
+TC --> Ticket : 7.1.1: getPosition()
+Ticket --> DB : 7.1.1.1: query()
+DB --> Ticket : 7.1.1.2: position
+Ticket --> TC : 7.1.2: return(3)
+TC --> UI : 7.2: position = 3
+UI --> Citizen : 7.3: displayPosition()
+
+note right of UI
+  Auto-refresh every 30 seconds
+  Real-time queue updates
+end note
+
+' ============================================
+' LEGEND
+' ============================================
+legend bottom
+|= Message Number |= Description |
+| 1, 1.1, 1.1.1 | Hierarchical numbering shows call sequence |
+| n.m | Sub-message m triggered by message n |
+| n.m.p | Nested sub-message within n.m |
+
+|= Stereotype |= Layer |= Color |
+| <<boundary>> | User Interface | Red |
+| <<control>> | Business Logic | Yellow |
+| <<entity>> | Data/Domain | Green |
+| Database | Persistence | Purple |
+endlegend
+
+@enduml
