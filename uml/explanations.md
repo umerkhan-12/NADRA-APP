@@ -4,6 +4,18 @@ This document provides explanations for each UML diagram created for the NADRA C
 
 ---
 
+## Rendered Diagrams
+
+| Diagram | Preview |
+|---------|---------|
+| Use Case Diagram | ![Use Case Diagram](use_case_diagram.png) |
+| Class Diagram | ![Class Diagram](class_diagram.png) |
+| Activity Diagram | ![Activity Diagram](activity_diagram.png) |
+| Sequence Diagram | ![Sequence Diagram](sequence_diagram.png) |
+| Collaboration Diagram | ![Collaboration Diagram](collaboration_diagram.png) |
+
+---
+
 ## Table of Contents
 
 1. [Use Case Diagram](#1-use-case-diagram)
@@ -17,7 +29,9 @@ This document provides explanations for each UML diagram created for the NADRA C
 
 ## 1. Use Case Diagram
 
-**File:** `use_case_diagram.puml`
+**File:** `use_case_diagram.puml` | **Rendered:** `use_case_diagram.png`
+
+![Use Case Diagram](use_case_diagram.png)
 
 ### Why This Diagram Type is Suitable
 
@@ -57,7 +71,9 @@ This diagram models the **complete functional scope** of the NADRA Citizen Porta
 
 ## 2. Class Diagram
 
-**File:** `class_diagram.puml`
+**File:** `class_diagram.puml` | **Rendered:** `class_diagram.png`
+
+![Class Diagram](class_diagram.png)
 
 ### Why This Diagram Type is Suitable
 
@@ -112,7 +128,9 @@ This diagram models the **complete object model** of the system:
 
 ## 3. Activity Diagram
 
-**File:** `activity_diagram.puml`
+**File:** `activity_diagram.puml` | **Rendered:** `activity_diagram.png`
+
+![Activity Diagram](activity_diagram.png)
 
 ### Why This Diagram Type is Suitable
 
@@ -184,7 +202,9 @@ This diagram models the **Ticket Creation and Payment Process** - the core busin
 
 ## 4. Sequence Diagram
 
-**File:** `sequence_diagram.puml`
+**File:** `sequence_diagram.puml` | **Rendered:** `sequence_diagram.png`
+
+![Sequence Diagram](sequence_diagram.png)
 
 ### Why This Diagram Type is Suitable
 
@@ -254,7 +274,9 @@ This diagram models the **Ticket Creation Use Case** in detail:
 
 ## 5. Collaboration Diagram
 
-**File:** `collaboration_diagram.puml`
+**File:** `collaboration_diagram.puml` | **Rendered:** `collaboration_diagram.png`
+
+![Collaboration Diagram](collaboration_diagram.png)
 
 ### Why This Diagram Type is Suitable
 
