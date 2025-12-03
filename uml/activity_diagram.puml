@@ -1,0 +1,239 @@
+@startuml NADRA_Activity_Diagram
+
+skinparam activityBorderColor #2196F3
+skinparam activityBackgroundColor #E3F2FD
+skinparam activityDiamondBorderColor #FF9800
+skinparam activityDiamondBackgroundColor #FFF3E0
+skinparam swimlaneBorderColor #4CAF50
+
+title NADRA Citizen Portal - Activity Diagram\nTicket Creation and Payment Process
+
+|#E8F5E9| Citizen |
+|#E3F2FD| System |
+|#FFF3E0| Agent |
+|#F3E5F5| Payment Gateway |
+
+|Citizen|
+start
+:Access NADRA Portal;
+:Navigate to Create Ticket;
+
+|System|
+:Display Service List;
+:Load Required Documents;
+
+|Citizen|
+:Select Service Type;
+:Select Priority Level\n(Normal/Urgent);
+
+|System|
+if (Urgent Priority?) then (yes)
+    :Apply Priority Boost (-10);
+    :Calculate Final Priority;
+else (no)
+    :Set Normal Priority;
+    :Calculate Final Priority;
+endif
+
+|System|
+:Display Required Documents List;
+
+|Citizen|
+:Upload Required Documents;
+note right
+  Supported formats:
+  PDF, JPG, PNG
+end note
+
+|System|
+if (All Mandatory Documents Uploaded?) then (yes)
+    :Validate Document Types;
+else (no)
+    |Citizen|
+    :Show Missing Documents Warning;
+    :Upload Remaining Documents;
+    |System|
+endif
+
+|Citizen|
+:Enter Delivery Information;
+:Provide Address Details;
+:Provide Contact Phone;
+
+|System|
+:Validate Delivery Information;
+
+if (Valid Address?) then (yes)
+    :Save Delivery Information;
+else (no)
+    |Citizen|
+    :Correct Address Information;
+    |System|
+endif
+
+|System|
+fork
+    :Find Available Agent;
+    note right
+      Algorithm:
+      1. Check all agents' workload
+      2. Filter by capacity < maxTickets
+      3. Select agent with least tickets
+    end note
+fork again
+    :Calculate Queue Position;
+end fork
+
+if (Agent Available?) then (yes)
+    :Assign Agent to Ticket;
+    :Set Status = IN_PROGRESS;
+else (no)
+    :Add to Waiting Queue;
+    :Set Status = OPEN;
+endif
+
+:Create Ticket Record;
+:Create Payment Record (PENDING);
+:Create Delivery Record;
+:Log Ticket Creation;
+
+|System|
+:Calculate Service Fee;
+:Display Payment Options;
+
+|Citizen|
+:Select Payment Method;
+
+if (Online Payment?) then (yes)
+    |Citizen|
+    :Enter Card Details;
+    note right
+      - 16-digit card number
+      - CVV code
+      - Expiry date
+    end note
+    
+    |System|
+    :Validate Card Format;
+    
+    if (Card Valid?) then (yes)
+        |Payment Gateway|
+        :Process Card Payment;
+        
+        if (Payment Successful?) then (yes)
+            :Generate Transaction ID;
+            
+            |System|
+            :Update Payment Status = COMPLETED;
+            :Record Transaction ID;
+            :Set Payment Timestamp;
+        else (no)
+            |Citizen|
+            :Show Payment Failed;
+            :Retry or Select Different Method;
+            |System|
+        endif
+    else (no)
+        |Citizen|
+        :Show Card Validation Error;
+        :Re-enter Card Details;
+        |System|
+    endif
+    
+else (Cash on Delivery)
+    |System|
+    :Set Payment Method = COD;
+    :Keep Payment Status = PENDING;
+    note right
+      Payment will be collected
+      when documents are delivered
+    end note
+endif
+
+|System|
+:Send Confirmation Email;
+:Display Ticket Summary;
+
+|Citizen|
+:View Queue Position;
+:View Estimated Wait Time;
+:Receive Email Confirmation;
+
+|System|
+:Auto-Refresh Queue (30s);
+
+|Agent|
+:Receive Ticket Assignment Notification;
+:View Assigned Ticket;
+:Review Uploaded Documents;
+
+if (Documents Complete?) then (yes)
+    :Begin Processing Ticket;
+    :Update Status = IN_PROGRESS;
+else (no)
+    :Request Additional Documents;
+    
+    |System|
+    :Notify Citizen of Missing Documents;
+    
+    |Citizen|
+    :Upload Additional Documents;
+    
+    |Agent|
+endif
+
+:Process Service Request;
+:Complete Required Actions;
+:Update Ticket Status = COMPLETED;
+
+|System|
+:Update Payment Status = COMPLETED (if COD);
+:Recalculate Queue Positions;
+:Auto-Assign Next Ticket to Agent;
+
+|Agent|
+:Update Delivery Status;
+:Set Status = DISPATCHED;
+:Add Tracking Number;
+:Assign Delivery Agent;
+
+|System|
+:Send Dispatch Notification Email;
+
+|Citizen|
+:Track Delivery Status;
+
+|Agent|
+:Update Status = IN_TRANSIT;
+
+|System|
+:Send In-Transit Notification;
+
+|Citizen|
+:View Delivery Updates;
+
+|Agent|
+:Confirm Delivery;
+:Update Status = DELIVERED;
+:Set Actual Delivery Timestamp;
+
+|System|
+:Send Delivery Confirmation Email;
+:Close Ticket;
+:Log Final Status;
+
+|Citizen|
+:Receive Delivered Documents;
+:Generate/Print Receipt;
+
+stop
+
+legend right
+  |= Symbol |= Meaning |
+  | Diamond | Decision Node |
+  | Fork/Join | Parallel Activities |
+  | Rectangle | Activity |
+  | Note | Additional Info |
+endlegend
+
+@enduml

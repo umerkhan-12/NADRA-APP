@@ -1,0 +1,106 @@
+@startuml Sequence_Diagram_Agent
+
+title NADRA Citizen Portal - Sequence Diagram\nAgent Ticket Processing Use Case
+
+actor Agent
+boundary "AgentDashboard" as Dash
+control "TicketController" as TC
+control "DeliveryController" as DC
+entity "Ticket" as Ticket
+entity "Delivery" as Delivery
+entity "TicketLog" as Log
+participant "EmailService" as Email
+database "Database" as DB
+
+== View Assigned Tickets ==
+
+Agent -> Dash : accessDashboard()
+Dash -> TC : getAssignedTickets(agentId)
+TC -> Ticket : findByAgent(agentId)
+Ticket -> DB : query()
+DB --> Ticket : tickets[]
+TC --> Dash : ticketList
+Dash -> Agent : displayTickets()
+
+== Process Ticket ==
+
+Agent -> Dash : selectTicket(ticketId)
+Dash -> TC : getTicketDetails(ticketId)
+TC -> Ticket : findById(ticketId)
+Ticket -> DB : query()
+DB --> Ticket : ticketDetails
+TC --> Dash : ticketInfo
+Dash -> Agent : displayTicketDetails()
+
+Agent -> Dash : viewDocuments()
+Dash -> Agent : displayUploadedDocuments()
+
+== Update Status ==
+
+Agent -> Dash : updateStatus(IN_PROGRESS)
+Dash -> TC : updateTicketStatus(ticketId, IN_PROGRESS)
+TC -> Ticket : setStatus(IN_PROGRESS)
+Ticket -> DB : update()
+DB --> Ticket : updated
+
+TC -> Log : create("Status changed to IN_PROGRESS")
+Log -> DB : insert()
+
+TC ->> Email : sendStatusUpdate(user, ticket)
+Email --> TC : emailSent
+
+TC --> Dash : Status Updated
+Dash -> Agent : showSuccessMessage()
+
+== Complete Ticket ==
+
+Agent -> Dash : markCompleted()
+Dash -> TC : completeTicket(ticketId)
+
+TC -> Ticket : setStatus(COMPLETED)
+TC -> Ticket : setClosedAt(now)
+Ticket -> DB : update()
+
+TC -> Log : create("Ticket completed")
+Log -> DB : insert()
+
+== Auto-Assignment ==
+
+TC -> TC : findNextWaitingTicket()
+TC -> Ticket : findOpenTickets()
+Ticket -> DB : query()
+DB --> Ticket : waitingTickets[]
+
+alt Waiting Tickets Exist
+    TC -> Ticket : assignToAgent(agentId)
+    Ticket -> DB : update()
+    TC ->> Email : sendAssignmentNotification(user, agent)
+end
+
+TC --> Dash : Ticket Completed
+Dash -> Agent : showCompletionMessage()
+
+== Update Delivery ==
+
+Agent -> Dash : updateDelivery(ticketId)
+Dash -> DC : getDelivery(ticketId)
+DC -> Delivery : find(ticketId)
+Delivery -> DB : query()
+DB --> Delivery : deliveryRecord
+
+Agent -> Dash : setStatus(DISPATCHED)
+Agent -> Dash : enterTrackingNumber()
+Agent -> Dash : enterAgentDetails()
+
+Dash -> DC : updateDelivery(deliveryId, data)
+DC -> Delivery : update(status, tracking, agent)
+Delivery -> DB : update()
+DB --> Delivery : confirmed
+
+DC ->> Email : sendDeliveryNotification(user, delivery)
+Email --> DC : emailSent
+
+DC --> Dash : Delivery Updated
+Dash -> Agent : showDeliverySuccess()
+
+@enduml

@@ -1,0 +1,27 @@
+@startuml Collaboration_Diagram_Registration
+
+title NADRA Citizen Portal - Collaboration Diagram\nUser Registration Use Case
+
+object "Citizen" as Citizen #LightGreen
+object "RegistrationForm" as Form #FFCDD2
+object "AuthController" as Auth #FFE082
+object "User" as User #C8E6C9
+object "OTP" as OTP #C8E6C9
+object "Database" as DB #E1BEE7
+object "EmailService" as Email #BBDEFB
+
+Citizen --> Form : 1: enterDetails()
+Form --> Auth : 1.1: validateInput()
+Auth --> DB : 1.2: checkEmailExists()
+Auth --> OTP : 2: generateOTP()
+OTP --> DB : 2.1: store()
+Auth --> Email : 2.2: sendOTP()
+Citizen --> Form : 3: enterOTP()
+Form --> Auth : 3.1: verifyOTP()
+Auth --> OTP : 3.2: validate()
+Auth --> User : 4: createUser()
+User --> DB : 4.1: insert()
+Auth --> Form : 4.2: success()
+Form --> Citizen : 4.3: redirectDashboard()
+
+@enduml

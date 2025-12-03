@@ -1,0 +1,121 @@
+@startuml NADRA_Use_Case_Diagram
+
+top to bottom direction
+skinparam actorStyle awesome
+skinparam usecaseBorderColor #2196F3
+skinparam usecaseBackgroundColor #E3F2FD
+skinparam actorBorderColor #4CAF50
+
+title NADRA Citizen Portal - Use Case Diagram
+
+' ============================================
+' ACTORS (Left Side)
+' ============================================
+actor "Citizen" as Citizen #LightGreen
+actor "Agent" as Agent #LightBlue
+actor "Admin" as Admin #Plum
+
+' ============================================
+' ACTORS (Right Side - External Systems)
+' ============================================
+actor "Email System" as Email #LightGray
+actor "Payment Gateway" as PaymentGW #Gold
+
+' ============================================
+' SYSTEM BOUNDARY
+' ============================================
+rectangle "NADRA Citizen Portal System" {
+    
+    usecase "Register Account" as UC_Register
+    usecase "Login" as UC_Login
+    usecase "Verify OTP" as UC_VerifyOTP
+    usecase "Logout" as UC_Logout
+    
+    usecase "Create Service Ticket" as UC_CreateTicket
+    usecase "Upload Documents" as UC_UploadDocs
+    usecase "Track Ticket Status" as UC_TrackTicket
+    usecase "View Queue Position" as UC_ViewQueue
+    usecase "Update Ticket Status" as UC_UpdateTicket
+    usecase "Assign Ticket to Agent" as UC_AssignTicket
+    usecase "Close Ticket" as UC_CloseTicket
+    
+    usecase "Process Payment" as UC_ProcessPayment
+    usecase "Select Payment Method" as UC_SelectMethod
+    usecase "Generate Receipt" as UC_GenerateReceipt
+    usecase "Verify Payment" as UC_VerifyPayment
+    
+    usecase "Provide Delivery Info" as UC_DeliveryInfo
+    usecase "Track Delivery" as UC_TrackDelivery
+    usecase "Update Delivery Status" as UC_UpdateDelivery
+    
+    usecase "Manage Users" as UC_ManageUsers
+    usecase "Manage Agents" as UC_ManageAgents
+    usecase "Manage Services" as UC_ManageServices
+    usecase "View System Dashboard" as UC_Dashboard
+    usecase "View System Logs" as UC_ViewLogs
+    usecase "Monitor Payments" as UC_MonitorPayments
+    
+    usecase "Use Chatbot" as UC_Chatbot
+}
+
+' ============================================
+' CITIZEN ASSOCIATIONS
+' ============================================
+Citizen --> UC_Register
+Citizen --> UC_Login
+Citizen --> UC_Logout
+Citizen --> UC_CreateTicket
+Citizen --> UC_UploadDocs
+Citizen --> UC_TrackTicket
+Citizen --> UC_ViewQueue
+Citizen --> UC_ProcessPayment
+Citizen --> UC_DeliveryInfo
+Citizen --> UC_TrackDelivery
+Citizen --> UC_GenerateReceipt
+Citizen --> UC_Chatbot
+
+' ============================================
+' AGENT ASSOCIATIONS
+' ============================================
+Agent --> UC_Login
+Agent --> UC_Logout
+Agent --> UC_UpdateTicket
+Agent --> UC_CloseTicket
+Agent --> UC_UpdateDelivery
+Agent --> UC_Dashboard
+
+' ============================================
+' ADMIN ASSOCIATIONS
+' ============================================
+Admin --> UC_Login
+Admin --> UC_Logout
+Admin --> UC_ManageUsers
+Admin --> UC_ManageAgents
+Admin --> UC_ManageServices
+Admin --> UC_Dashboard
+Admin --> UC_ViewLogs
+Admin --> UC_MonitorPayments
+Admin --> UC_AssignTicket
+
+' ============================================
+' EXTERNAL SYSTEM ASSOCIATIONS
+' ============================================
+UC_Register --> Email
+UC_VerifyOTP --> Email
+UC_UpdateTicket --> Email
+UC_UpdateDelivery --> Email
+UC_ProcessPayment --> PaymentGW
+UC_VerifyPayment --> PaymentGW
+
+' ============================================
+' USE CASE RELATIONSHIPS (Include/Extend)
+' ============================================
+UC_Register ..> UC_VerifyOTP : <<include>>
+UC_CreateTicket ..> UC_AssignTicket : <<include>>
+UC_CreateTicket ..> UC_UploadDocs : <<extend>>
+UC_CreateTicket ..> UC_DeliveryInfo : <<extend>>
+UC_ProcessPayment ..> UC_SelectMethod : <<include>>
+UC_ProcessPayment ..> UC_VerifyPayment : <<include>>
+UC_CloseTicket ..> UC_GenerateReceipt : <<include>>
+
+@enduml

@@ -1,0 +1,33 @@
+@startuml Collaboration_Diagram_Delivery
+
+title NADRA Citizen Portal - Collaboration Diagram\nDelivery Update Use Case
+
+object "Agent" as Agent #LightBlue
+object "AgentDashboard" as Dash #FFCDD2
+object "DeliveryController" as DC #FFE082
+object "Delivery" as Delivery #C8E6C9
+object "Ticket" as Ticket #C8E6C9
+object "Payment" as Payment #C8E6C9
+object "Database" as DB #E1BEE7
+object "EmailService" as Email #BBDEFB
+
+Agent --> Dash : 1: selectTicket()
+Dash --> DC : 1.1: getDelivery()
+DC --> Delivery : 1.2: findByTicket()
+Delivery --> DB : 1.3: query()
+Agent --> Dash : 2: updateStatus()
+Dash --> DC : 2.1: setStatus(DISPATCHED)
+DC --> Delivery : 2.2: update()
+Delivery --> DB : 2.3: save()
+Agent --> Dash : 3: enterTracking()
+Dash --> DC : 3.1: setTrackingNumber()
+DC --> Delivery : 3.2: update()
+DC --> Email : 4: sendNotification()
+Agent --> Dash : 5: confirmDelivery()
+Dash --> DC : 5.1: setDelivered()
+DC --> Ticket : 5.2: closeTicket()
+DC --> Payment : 5.3: updateIfCOD()
+Payment --> DB : 5.4: update()
+DC --> Email : 5.5: sendDeliveryEmail()
+
+@enduml
