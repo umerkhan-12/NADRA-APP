@@ -1,0 +1,98 @@
+@startuml Activity_Diagram_Admin
+
+title NADRA Citizen Portal - Activity Diagram\nAdmin Agent Management Process
+
+|Admin|
+start
+:Login to Admin Dashboard;
+:View System Statistics;
+:Select Action;
+
+switch (Action Type?)
+case (Create Agent)
+    :Click Create Agent;
+    :Enter Agent Details;
+    note right
+      - Name
+      - Email
+      - Username
+      - Password
+      - Max Tickets
+    end note
+    
+    |System|
+    :Validate Input;
+    
+    if (Username Unique?) then (yes)
+        :Hash Password;
+        :Create Agent Record;
+        :Send Credentials Email;
+        
+        |Admin|
+        :Agent Created Successfully;
+    else (no)
+        |Admin|
+        :Show Username Exists Error;
+    endif
+    
+case (Delete Agent)
+    |Admin|
+    :Select Agent to Delete;
+    :Confirm Deletion;
+    
+    |System|
+    :Check Assigned Tickets;
+    
+    if (Has Active Tickets?) then (yes)
+        :Find Available Agent;
+        :Reassign All Tickets;
+        :Update Ticket Records;
+        :Notify Affected Users;
+    endif
+    
+    :Delete Agent Record;
+    
+    |Admin|
+    :Agent Deleted;
+    
+case (View Reports)
+    |Admin|
+    :Select Report Type;
+    
+    |System|
+    :Generate Report Data;
+    :Display Statistics;
+    
+    |Admin|
+    :View Report;
+    
+case (Manage Services)
+    |Admin|
+    :View Services;
+    :Select Service Action;
+    
+    if (Create New?) then (yes)
+        :Enter Service Details;
+        :Set Fee and Priority;
+        :Define Required Documents;
+        
+        |System|
+        :Create Service Record;
+        
+        |Admin|
+        :Service Created;
+    else (Edit Existing)
+        :Select Service;
+        :Modify Details;
+        
+        |System|
+        :Update Service;
+        
+        |Admin|
+        :Service Updated;
+    endif
+endswitch
+
+stop
+
+@enduml

@@ -1,0 +1,35 @@
+@startuml Collaboration_Diagram_Admin
+
+title NADRA Citizen Portal - Collaboration Diagram\nAdmin User Management Use Case
+
+object "Admin" as Admin #Plum
+object "AdminDashboard" as Dash #FFCDD2
+object "AdminController" as AC #FFE082
+object "User" as User #C8E6C9
+object "Agent" as Agent #C8E6C9
+object "Ticket" as Ticket #C8E6C9
+object "Database" as DB #E1BEE7
+object "EmailService" as Email #BBDEFB
+
+Admin --> Dash : 1: viewDashboard()
+Dash --> AC : 1.1: getSystemStats()
+AC --> User : 1.2: countUsers()
+AC --> Agent : 1.3: countAgents()
+AC --> Ticket : 1.4: countTickets()
+Admin --> Dash : 2: manageAgents()
+Dash --> AC : 2.1: getAllAgents()
+AC --> Agent : 2.2: findAll()
+Agent --> DB : 2.3: query()
+Admin --> Dash : 3: createAgent()
+Dash --> AC : 3.1: createAgent(data)
+AC --> Agent : 3.2: create()
+Agent --> DB : 3.3: insert()
+AC --> Email : 3.4: sendCredentials()
+Admin --> Dash : 4: deleteAgent()
+Dash --> AC : 4.1: deleteAgent(id)
+AC --> Ticket : 4.2: reassignTickets()
+Ticket --> DB : 4.3: update()
+AC --> Agent : 4.4: delete()
+Agent --> DB : 4.5: remove()
+
+@enduml

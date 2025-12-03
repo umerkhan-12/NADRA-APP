@@ -1,0 +1,35 @@
+@startuml Collaboration_Diagram_Agent
+
+title NADRA Citizen Portal - Collaboration Diagram\nAgent Ticket Processing Use Case
+
+object "Agent" as Agent #LightBlue
+object "AgentDashboard" as Dash #FFCDD2
+object "TicketController" as TC #FFE082
+object "Ticket" as Ticket #C8E6C9
+object "TicketLog" as Log #C8E6C9
+object "Document" as Doc #C8E6C9
+object "Database" as DB #E1BEE7
+object "EmailService" as Email #BBDEFB
+
+Agent --> Dash : 1: viewDashboard()
+Dash --> TC : 1.1: getAssignedTickets()
+TC --> Ticket : 1.2: findByAgent()
+Ticket --> DB : 1.3: query()
+Agent --> Dash : 2: selectTicket()
+Dash --> TC : 2.1: getTicketDetails()
+TC --> Doc : 2.2: getDocuments()
+Doc --> DB : 2.3: query()
+Agent --> Dash : 3: reviewDocuments()
+Agent --> Dash : 4: updateStatus()
+Dash --> TC : 4.1: setStatus(IN_PROGRESS)
+TC --> Ticket : 4.2: update()
+Ticket --> DB : 4.3: save()
+TC --> Log : 4.4: createLog()
+Log --> DB : 4.5: insert()
+TC --> Email : 4.6: notifyUser()
+Agent --> Dash : 5: markComplete()
+Dash --> TC : 5.1: completeTicket()
+TC --> Ticket : 5.2: setCompleted()
+TC --> TC : 5.3: autoAssignNext()
+
+@enduml
