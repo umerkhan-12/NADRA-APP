@@ -26,6 +26,7 @@ After months of dedicated development, I'm proud to present a production-ready s
 • Backend: NextAuth.js, Prisma ORM 6.19.0
 • Database: MySQL 8.0 with optimized indexes
 • Email: Nodemailer with Gmail SMTP
+• Hosting: Heroku
 
 🎯 Key Features:
 • 3 User Roles: Citizen, Agent, Admin
@@ -40,10 +41,12 @@ This project demonstrates my skills in:
 ✅ Authentication & security
 ✅ Clean code architecture
 ✅ Modern UI/UX design
+✅ Cloud deployment & DevOps
 
-🔗 Check it out on GitHub: https://github.com/umerkhan-12/NADRA-APP
+🌐 Live Demo: https://nadra-app-8286f93c3df0.herokuapp.com
+🔗 GitHub: https://github.com/umerkhan-12/NADRA-APP
 
-I'd love to hear your feedback! Feel free to ⭐ the repo if you find it useful.
+Try the live demo and explore all features! I'd love to hear your feedback! Feel free to ⭐ the repo if you find it useful.
 
 #WebDevelopment #NextJS #React #FullStack #JavaScript #TypeScript #MySQL #Prisma #OpenSource #Portfolio #SoftwareEngineering #Programming #Developer #TechProject #GitHub #FrontendDevelopment #BackendDevelopment #UIUX #Authentication #Database
 ```
@@ -64,7 +67,8 @@ A full-stack service management system featuring:
 
 Built with modern best practices: transactions, indexing, security hardening, and clean architecture.
 
-Check it out: https://github.com/umerkhan-12/NADRA-APP
+🌐 Live Demo: https://nadra-app-8286f93c3df0.herokuapp.com
+📂 GitHub: https://github.com/umerkhan-12/NADRA-APP
 
 Would love your feedback! ⭐
 
@@ -106,6 +110,8 @@ Adding visuals dramatically increases engagement. Consider including:
 - #SoftwareEngineering
 - #Programming
 - #Developer
+- #Heroku
+- #CloudDeployment
 
 ### Trending/Niche Hashtags:
 - #100DaysOfCode
@@ -156,7 +162,8 @@ Full-stack service management system:
 
 Built with ❤️ using modern best practices.
 
-GitHub: https://github.com/umerkhan-12/NADRA-APP
+🌐 Live: https://nadra-app-8286f93c3df0.herokuapp.com
+📂 GitHub: https://github.com/umerkhan-12/NADRA-APP
 
 #WebDev #NextJS #React #OpenSource
 ```
@@ -178,6 +185,7 @@ Use these impressive numbers in your posts:
 - **10+ API endpoints**
 - **Database optimizations** achieving 70-90% faster queries
 - **Modern tech stack** with latest versions
+- **Live on Heroku** - Production deployment
 
 ---
 
@@ -204,6 +212,7 @@ Use these impressive numbers in your posts:
 Before posting, make sure:
 
 - [ ] GitHub repo is public and accessible
+- [ ] Live demo on Heroku is working
 - [ ] README is complete and professional
 - [ ] Code is clean and well-documented
 - [ ] Demo/screenshots are available
