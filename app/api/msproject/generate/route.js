@@ -70,7 +70,7 @@ export async function POST(request) {
     const xml = generateMSProjectXML(projectData, parsedTasks);
 
     // Return XML file
-    const filename = `${projectData.name.replace(/[^a-z0-9]/gi, '_')}.xml`;
+    const filename = `${projectData.name.replace(/[<>:"/\\|?*]/g, '_')}.xml`;
     
     return new NextResponse(xml, {
       status: 200,

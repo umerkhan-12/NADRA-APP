@@ -121,7 +121,7 @@ export default function MSProjectGenerator() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${projectName.replace(/[^a-z0-9]/gi, '_')}.xml`;
+      a.download = `${projectName.replace(/[<>:"/\\|?*]/g, '_')}.xml`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
