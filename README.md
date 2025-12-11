@@ -25,7 +25,8 @@ A **production-ready**, full-stack **NADRA service management platform** featuri
 📊 **Advanced Dashboard** - Beautiful, responsive dashboards for all user roles  
 ⚡ **Optimized Performance** - Database indexes, transactions, and query optimization  
 🔒 **Security Hardened** - Rate limiting, idempotency, and data integrity  
-🎨 **Modern UI/UX** - Gradient themes with smooth animations and glassmorphism
+🎨 **Modern UI/UX** - Gradient themes with smooth animations and glassmorphism  
+📋 **MS Project Generator** - Convert WBS to MS Project XML files with ease
 
 ---
 
@@ -58,6 +59,7 @@ A **production-ready**, full-stack **NADRA service management platform** featuri
 ## 📖 Table of Contents
 
 - [Features Overview](#-features-overview)
+  - [MS Project Generator](#-8-ms-project-file-generator)
 - [System Architecture](#-system-architecture)
 - [Database Design](#-database-design)
 - [Installation Guide](#-installation-guide)
@@ -327,6 +329,56 @@ PENDING → DISPATCHED → IN_TRANSIT → DELIVERED
 - Loading states with spinners
 - Toast notifications for feedback
 - Smooth page transitions
+
+---
+
+### 📋 **8. MS Project File Generator**
+
+**Convert WBS to MS Project:**
+- Web-based interface for easy WBS input
+- Support for text and JSON formats
+- Hierarchical task structure with parent-child relationships
+- MS Project XML export (compatible with MS Project 2003+)
+- REST API for programmatic access
+- Task properties: duration, start dates, priorities, completion %
+
+**Features:**
+- ✅ Multiple input formats (text with indentation or JSON)
+- ✅ Automatic task ID and WBS code generation
+- ✅ Support for task dependencies and predecessors
+- ✅ Project metadata (name, start date, company, manager)
+- ✅ Downloadable XML files ready for MS Project
+- ✅ Sample templates for quick start
+- ✅ Validation and error handling
+
+**Access:**
+- **Web Interface**: `/msproject`
+- **API Endpoint**: `/api/msproject/generate`
+- **Documentation**: [MS_PROJECT_GENERATOR.md](MS_PROJECT_GENERATOR.md)
+
+**Example Text Format:**
+```
+1. Planning Phase (10 days)
+  1.1. Requirements Gathering (5 days)
+  1.2. System Design (5 days)
+2. Development Phase (20 days)
+  2.1. Frontend Development (10 days)
+  2.2. Backend Development (10 days)
+```
+
+**Example JSON Format:**
+```json
+[
+  {
+    "name": "Planning Phase",
+    "duration": 10,
+    "children": [
+      { "name": "Requirements Gathering", "duration": 5 },
+      { "name": "System Design", "duration": 5 }
+    ]
+  }
+]
+```
 
 ---
 
