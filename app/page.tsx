@@ -170,6 +170,9 @@ export default function Home() {
             <a href="#contact" className="hover:text-green-600">
               Contact
             </a>
+            <Link href="/msproject" className="hover:text-green-600">
+              MS Project
+            </Link>
           </nav>
 
           {/* CTA Buttons */}
@@ -206,6 +209,9 @@ export default function Home() {
             <a href="#contact" className="hover:text-green-600">
               Contact
             </a>
+            <Link href="/msproject" className="hover:text-green-600">
+              MS Project
+            </Link>
             <button className="px-4 py-2 border rounded-lg hover:bg-gray-50">
               Login
             </button>
