@@ -193,7 +193,7 @@ export default function Home() {
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden px-4 pb-4 flex flex-col space-y-3">
+          <div className="md:hidden  px-4 pb-4 flex justify-center items-center flex-col space-y-3">
             <a href="#home" className="hover:text-green-600">
               Home
             </a>
@@ -206,17 +206,17 @@ export default function Home() {
             <a href="#contact" className="hover:text-green-600">
               Contact
             </a>
-            <Link href="/login">
+            <a href="/login" >
             
             <button className="px-4 py-2 border rounded-lg hover:bg-gray-50">
               Login
             </button>
-            </Link>
-            <Link href="/register">
+            </a>
+            <a href="/register" >
             <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
               Register
             </button>
-            </Link>
+            </a>
           </div>
         )}
       </header>
