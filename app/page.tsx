@@ -206,12 +206,17 @@ export default function Home() {
             <a href="#contact" className="hover:text-green-600">
               Contact
             </a>
+            <Link href="/login">
+            
             <button className="px-4 py-2 border rounded-lg hover:bg-gray-50">
               Login
             </button>
+            </Link>
+            <Link href="/register">
             <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
               Register
             </button>
+            </Link>
           </div>
         )}
       </header>
