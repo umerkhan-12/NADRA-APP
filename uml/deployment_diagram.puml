@@ -1,0 +1,106 @@
+@startuml Deployment_Diagram
+
+title NADRA Citizen Portal - Deployment Diagram
+
+skinparam node {
+    BackgroundColor #E3F2FD
+    BorderColor #2196F3
+}
+
+skinparam database {
+    BackgroundColor #FFEBEE
+    BorderColor #F44336
+}
+
+skinparam artifact {
+    BackgroundColor #E8F5E9
+    BorderColor #4CAF50
+}
+
+' Client Tier
+node "Client Tier" as ClientTier {
+    node "Web Browser" as Browser {
+        artifact "React 19\nComponents" as ReactApp
+        artifact "TailwindCSS 4\nStyles" as Styles
+    }
+    
+    node "Mobile Browser" as Mobile {
+        artifact "Responsive\nUI" as MobileUI
+    }
+}
+
+' Application Tier
+node "Application Server" as AppServer {
+    node "Next.js 16 Runtime" as NextJS {
+        artifact "App Router" as AppRouter
+        artifact "API Routes" as APIRoutes
+        artifact "Server Components" as ServerComp
+        artifact "Middleware" as Middleware
+    }
+    
+    node "NextAuth.js" as Auth {
+        artifact "JWT Provider" as JWT
+        artifact "Session Manager" as SessionMgr
+    }
+    
+    node "Business Logic" as Logic {
+        artifact "AuthController" as AuthCtrl
+        artifact "TicketController" as TicketCtrl
+        artifact "PaymentController" as PaymentCtrl
+        artifact "DeliveryController" as DeliveryCtrl
+        artifact "AdminController" as AdminCtrl
+    }
+}
+
+' Data Tier
+node "Data Tier" as DataTier {
+    node "Prisma ORM" as Prisma {
+        artifact "Query Builder" as QueryBuilder
+        artifact "Migration Engine" as Migrations
+        artifact "Type Generator" as TypeGen
+    }
+    
+    database "MySQL 8.0" as MySQL {
+        artifact "Users Table" as UsersDB
+        artifact "Agents Table" as AgentsDB
+        artifact "Tickets Table" as TicketsDB
+        artifact "Payments Table" as PaymentsDB
+        artifact "Delivery Table" as DeliveryDB
+        artifact "Services Table" as ServicesDB
+    }
+}
+
+' External Services
+node "External Services" as External {
+    node "Gmail SMTP" as Gmail {
+        artifact "Nodemailer\nTransport" as Nodemailer
+    }
+    
+    node "Payment Gateway" as PaymentGW {
+        artifact "Card\nProcessor" as CardProc
+    }
+}
+
+' Connections
+Browser --> AppServer : HTTPS
+Mobile --> AppServer : HTTPS
+
+AppRouter --> APIRoutes : Routes
+APIRoutes --> Middleware : Auth Check
+Middleware --> Auth : Validate
+Auth --> Logic : Authorized
+
+AuthCtrl --> Prisma : Queries
+TicketCtrl --> Prisma : Queries
+PaymentCtrl --> Prisma : Queries
+DeliveryCtrl --> Prisma : Queries
+AdminCtrl --> Prisma : Queries
+
+Prisma --> MySQL : SQL
+
+AuthCtrl --> Gmail : Send OTP
+TicketCtrl --> Gmail : Notifications
+DeliveryCtrl --> Gmail : Status Updates
+PaymentCtrl --> PaymentGW : Process Payment
+
+@enduml

@@ -1,0 +1,58 @@
+@startuml NADRA_Collaboration_Diagram
+
+skinparam objectBorderColor #2196F3
+skinparam objectBackgroundColor #E3F2FD
+skinparam arrowColor #37474F
+
+title NADRA Citizen Portal - Collaboration Diagram\nTicket Creation Use Case
+
+' ============================================
+' OBJECTS (PARTICIPANTS)
+' ============================================
+
+object "Citizen" as Citizen #LightGreen
+object "TicketForm" as UI #FFCDD2
+object "TicketController" as TC #FFE082
+object "PaymentController" as PC #FFE082
+object "Ticket" as Ticket #C8E6C9
+object "Payment" as Payment #C8E6C9
+object "Delivery" as Delivery #C8E6C9
+object "Agent" as Agent #C8E6C9
+object "Database" as DB #E1BEE7
+object "EmailService" as Email #BBDEFB
+
+' ============================================
+' COLLABORATION MESSAGES
+' ============================================
+
+' Phase 1: Form Access
+Citizen --> UI : 1: accessPage()
+UI --> TC : 1.1: loadServices()
+TC --> DB : 1.2: getServices()
+
+' Phase 2: Ticket Creation
+Citizen --> UI : 2: submitTicket()
+UI --> TC : 2.1: createTicket()
+TC --> Agent : 2.2: findAvailableAgent()
+TC --> Ticket : 2.3: create()
+Ticket --> DB : 2.4: insert()
+TC --> Payment : 2.5: createPayment()
+Payment --> DB : 2.6: insert()
+TC --> Delivery : 2.7: createDelivery()
+Delivery --> DB : 2.8: insert()
+TC --> Email : 2.9: sendConfirmation()
+
+' Phase 3: Payment
+Citizen --> UI : 3: processPayment()
+UI --> PC : 3.1: pay()
+PC --> Payment : 3.2: updateStatus()
+Payment --> DB : 3.3: update()
+PC --> Email : 3.4: sendReceipt()
+
+' Phase 4: Queue Tracking
+Citizen --> UI : 4: checkQueue()
+UI --> TC : 4.1: getPosition()
+TC --> Ticket : 4.2: getQueuePosition()
+TC --> UI : 4.3: returnPosition()
+
+@enduml

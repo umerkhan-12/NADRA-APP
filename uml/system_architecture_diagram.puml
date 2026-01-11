@@ -1,0 +1,163 @@
+@startuml NADRA_System_Architecture
+
+!define ICONURL https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/v2.4.0
+skinparam backgroundColor #FEFEFE
+skinparam roundCorner 15
+skinparam shadowing true
+
+title NADRA Citizen Portal - System Architecture
+
+' Color Definitions
+!define CLIENT_COLOR #E8F5E9
+!define NEXTJS_COLOR #000000
+!define API_COLOR #E3F2FD
+!define BUSINESS_COLOR #FFF3E0
+!define ORM_COLOR #F3E5F5
+!define DB_COLOR #FFEBEE
+!define EXTERNAL_COLOR #E0F7FA
+
+' ==========================================
+' CLIENT LAYER
+' ==========================================
+rectangle "**Client Layer** (Browser)" as ClientLayer <<Client>> #E8F5E9 {
+    rectangle "User Dashboard\n🟢 Emerald Theme" as UserDash #A5D6A7
+    rectangle "Agent Dashboard\n🔵 Blue Theme" as AgentDash #90CAF9
+    rectangle "Admin Dashboard\n🟣 Purple Theme" as AdminDash #CE93D8
+}
+
+' ==========================================
+' NEXT.JS APPLICATION LAYER
+' ==========================================
+rectangle "**Next.js 16 Application** (App Router)" as NextLayer <<Framework>> #424242 {
+    rectangle "Server Components\n(SSR)" as SSR #616161
+    rectangle "Client Components\n(CSR)" as CSR #757575
+    rectangle "Middleware\n(Auth Guard)" as Middleware #546E7A
+}
+
+' ==========================================
+' API LAYER
+' ==========================================
+rectangle "**API Layer** (Serverless Routes)" as APILayer <<API>> #E3F2FD {
+    rectangle "Auth APIs\n/api/auth/*" as AuthAPI #90CAF9
+    rectangle "Ticket APIs\n/api/tickets/*" as TicketAPI #64B5F6
+    rectangle "Payment APIs\n/api/payments/*" as PaymentAPI #42A5F5
+    rectangle "Delivery APIs\n/api/delivery/*" as DeliveryAPI #2196F3
+    rectangle "Admin APIs\n/api/admin/*" as AdminAPI #1E88E5
+}
+
+' ==========================================
+' BUSINESS LOGIC LAYER
+' ==========================================
+rectangle "**Business Logic Layer** (Controllers)" as BusinessLayer <<Logic>> #FFF3E0 {
+    rectangle "AuthController\n• OTP • Sessions" as AuthCtrl #FFE0B2
+    rectangle "TicketController\n• Assignment • Queue" as TicketCtrl #FFCC80
+    rectangle "PaymentController\n• Idempotency" as PaymentCtrl #FFB74D
+    rectangle "DeliveryController\n• Tracking" as DeliveryCtrl #FFA726
+}
+
+' ==========================================
+' DATA ACCESS LAYER
+' ==========================================
+rectangle "**Data Access Layer** (Prisma ORM)" as DataLayer <<ORM>> #F3E5F5 {
+    rectangle "Query Builder" as QueryBuilder #E1BEE7
+    rectangle "Transactions" as Transactions #CE93D8
+    rectangle "Type Generation" as TypeGen #BA68C8
+}
+
+' ==========================================
+' DATABASE LAYER
+' ==========================================
+database "**MySQL 8.0 Database**" as DBLayer <<Database>> #FFEBEE {
+    rectangle "Users" as UsersTable #FFCDD2
+    rectangle "Agents" as AgentsTable #EF9A9A
+    rectangle "Tickets" as TicketsTable #E57373
+    rectangle "Payments" as PaymentsTable #EF5350
+    rectangle "Delivery" as DeliveryTable #F44336
+    rectangle "Services" as ServicesTable #E53935
+}
+
+' ==========================================
+' EXTERNAL SERVICES
+' ==========================================
+rectangle "**External Services**" as ExternalLayer <<External>> #E0F7FA {
+    rectangle "Gmail SMTP\n📧 Nodemailer" as EmailService #B2EBF2
+    rectangle "Payment Gateway\n💳 Card Processing" as PaymentGW #80DEEA
+}
+
+' ==========================================
+' CONNECTIONS
+' ==========================================
+
+' Client to Next.js
+UserDash --> SSR
+AgentDash --> SSR
+AdminDash --> SSR
+SSR --> CSR
+CSR --> Middleware
+
+' Next.js to API
+Middleware --> AuthAPI
+Middleware --> TicketAPI
+Middleware --> PaymentAPI
+Middleware --> DeliveryAPI
+Middleware --> AdminAPI
+
+' API to Business Logic
+AuthAPI --> AuthCtrl
+TicketAPI --> TicketCtrl
+PaymentAPI --> PaymentCtrl
+DeliveryAPI --> DeliveryCtrl
+AdminAPI --> TicketCtrl
+
+' Business Logic to Data Access
+AuthCtrl --> QueryBuilder
+TicketCtrl --> Transactions
+PaymentCtrl --> Transactions
+DeliveryCtrl --> QueryBuilder
+
+' Data Access to Database
+QueryBuilder --> UsersTable
+QueryBuilder --> AgentsTable
+Transactions --> TicketsTable
+Transactions --> PaymentsTable
+Transactions --> DeliveryTable
+QueryBuilder --> ServicesTable
+
+' External Services
+AuthCtrl --> EmailService
+TicketCtrl --> EmailService
+DeliveryCtrl --> EmailService
+PaymentCtrl --> PaymentGW
+
+' ==========================================
+' NOTES
+' ==========================================
+note right of ClientLayer
+  **React 19 + TailwindCSS 4**
+  • Role-based dashboards
+  • Real-time updates (30s)
+  • Glassmorphism UI
+end note
+
+note right of APILayer
+  **NextAuth.js 4.24**
+  • JWT Sessions
+  • Rate Limiting
+  • RBAC Protection
+end note
+
+note right of DataLayer
+  **Prisma 6.19**
+  • Type-safe queries
+  • Atomic transactions
+  • Connection pooling
+end note
+
+note left of DBLayer
+  **Optimized Indexes**
+  • Ticket status
+  • Queue position
+  • Agent assignment
+end note
+
+@enduml

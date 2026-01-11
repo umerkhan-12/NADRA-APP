@@ -1,0 +1,94 @@
+@startuml Sequence_Diagram_Payment
+
+title NADRA Citizen Portal - Sequence Diagram\nPayment Processing Use Case
+
+actor Citizen
+boundary "PaymentForm" as Form
+control "PaymentController" as PC
+entity "Payment" as Payment
+entity "Ticket" as Ticket
+participant "PaymentGateway" as PG
+participant "EmailService" as Email
+database "Database" as DB
+
+== Payment Initiation ==
+
+Citizen -> Form : viewTicket(ticketId)
+Form -> PC : getPaymentDetails(ticketId)
+PC -> Payment : find(ticketId)
+Payment -> DB : query()
+DB --> Payment : paymentRecord
+PC --> Form : paymentInfo
+Form -> Citizen : displayPaymentOptions()
+
+== Online Payment ==
+
+Citizen -> Form : selectOnlinePayment()
+Form -> Citizen : displayCardForm()
+Citizen -> Form : enterCardDetails(cardNumber, cvv, expiry)
+
+Form -> PC : processPayment(ticketId, cardDetails)
+
+== Idempotency Check ==
+
+PC -> Payment : checkStatus(ticketId)
+Payment -> DB : query()
+DB --> Payment : status
+
+alt Already Completed
+    PC --> Form : 409 Conflict (Already Paid)
+    Form -> Citizen : showAlreadyPaidMessage()
+else Payment Pending
+    
+    == Card Validation ==
+    
+    PC -> PC : validateCardFormat()
+    
+    alt Card Invalid
+        PC --> Form : Invalid Card
+        Form -> Citizen : showCardError()
+    else Card Valid
+        
+        == Payment Processing ==
+        
+        PC -> PG : chargeCard(amount, cardDetails)
+        
+        alt Payment Failed
+            PG --> PC : paymentFailed(error)
+            PC --> Form : Payment Failed
+            Form -> Citizen : showPaymentError()
+        else Payment Success
+            PG --> PC : paymentSuccess(transactionId)
+            
+            == Update Records ==
+            
+            PC -> Payment : updateStatus(COMPLETED)
+            Payment -> DB : update()
+            DB --> Payment : confirmed
+            
+            PC -> Payment : setTransactionId(txnId)
+            PC -> Payment : setPaidAt(timestamp)
+            
+            == Notification ==
+            
+            PC ->> Email : sendPaymentConfirmation(user, payment)
+            Email --> PC : emailSent
+            
+            PC --> Form : Payment Success
+            Form -> Citizen : displayReceipt()
+        end
+    end
+end
+
+== Cash on Delivery ==
+
+alt COD Selected
+    Citizen -> Form : selectCOD()
+    Form -> PC : setCODPayment(ticketId)
+    PC -> Payment : setMethod(CASH_ON_DELIVERY)
+    Payment -> DB : update()
+    PC --> Form : COD Set
+    Form -> Citizen : showCODConfirmation()
+end
+
+@enduml

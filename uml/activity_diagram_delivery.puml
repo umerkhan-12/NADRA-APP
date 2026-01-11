@@ -1,0 +1,75 @@
+@startuml Activity_Diagram_Delivery
+
+title NADRA Citizen Portal - Activity Diagram\nDelivery Tracking Process
+
+|Agent|
+start
+:View Completed Ticket;
+:Access Delivery Section;
+
+|System|
+:Load Delivery Details;
+
+|Agent|
+:Select Delivery Action;
+
+switch (Delivery Status?)
+case (DISPATCHED)
+    :Enter Tracking Number;
+    :Enter Delivery Agent Name;
+    :Enter Delivery Agent Phone;
+    :Set Estimated Delivery Date;
+    
+    |System|
+    :Save Delivery Info;
+    :Send Dispatch Email;
+    
+    |Citizen|
+    :Receive Dispatch Notification;
+    :View Tracking Details;
+    
+case (IN_TRANSIT)
+    |Agent|
+    :Update to In Transit;
+    :Add Delivery Notes;
+    
+    |System|
+    :Update Status;
+    :Send Transit Email;
+    
+    |Citizen|
+    :Receive Transit Notification;
+    :Track Delivery Progress;
+    
+case (DELIVERED)
+    |Agent|
+    :Confirm Delivery;
+    :Set Actual Delivery Time;
+    :Add Final Notes;
+    
+    |System|
+    :Update Status to DELIVERED;
+    :Update Payment if COD;
+    :Close Ticket;
+    :Send Delivery Email;
+    
+    |Citizen|
+    :Receive Delivery Confirmation;
+    :View Final Receipt;
+    
+case (CANCELLED)
+    |Agent|
+    :Enter Cancellation Reason;
+    
+    |System|
+    :Update Status to CANCELLED;
+    :Initiate Refund if paid;
+    :Send Cancellation Email;
+    
+    |Citizen|
+    :Receive Cancellation Notice;
+endswitch
+
+stop
+
+@enduml

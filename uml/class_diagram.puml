@@ -1,0 +1,406 @@
+@startuml NADRA_Class_Diagram
+
+skinparam classAttributeIconSize 0
+skinparam classBorderColor #2196F3
+skinparam classBackgroundColor #E3F2FD
+skinparam stereotypeCBackgroundColor #FFE082
+skinparam stereotypeEBackgroundColor #C8E6C9
+skinparam stereotypeBBackgroundColor #FFCDD2
+
+title NADRA Citizen Portal - Class Diagram
+
+' ============================================
+' ENUMERATIONS
+' ============================================
+enum UserRole {
+    USER
+    ADMIN
+}
+
+enum TicketStatus {
+    OPEN
+    IN_PROGRESS
+    COMPLETED
+    CLOSED
+}
+
+enum Priority {
+    HIGH
+    MEDIUM
+    LOW
+}
+
+enum CustomerPriority {
+    NORMAL
+    URGENT
+}
+
+enum PaymentStatus {
+    PENDING
+    COMPLETED
+}
+
+enum DeliveryStatus {
+    PENDING
+    DISPATCHED
+    IN_TRANSIT
+    DELIVERED
+    CANCELLED
+}
+
+' ============================================
+' ENTITY CLASSES
+' ============================================
+class User <<entity>> {
+    - id: int
+    - name: string
+    - cnic: string {unique}
+    - email: string {unique}
+    - phone: string
+    - password: string
+    - role: UserRole
+    - createdAt: DateTime
+    __
+    + createTicket(service: Service): Ticket
+    + makePayment(ticket: Ticket, method: string): Payment
+    + trackDelivery(ticket: Ticket): Delivery
+    + getTickets(): Ticket[]
+}
+
+class Agent <<entity>> {
+    - id: int
+    - name: string
+    - email: string {unique}
+    - username: string {unique}
+    - password: string
+    - maxTickets: int = 5
+    - createdAt: DateTime
+    __
+    + getAssignedTickets(): Ticket[]
+    + updateTicketStatus(ticket: Ticket, status: TicketStatus): void
+    + updateDeliveryStatus(delivery: Delivery, status: DeliveryStatus): void
+    + canAcceptMoreTickets(): boolean
+    + getCurrentWorkload(): int
+}
+
+class Service <<entity>> {
+    - id: int
+    - name: string
+    - description: string
+    - fee: float
+    - defaultPriority: Priority
+    __
+    + getRequiredDocuments(): RequiredDocument[]
+    + getTickets(): Ticket[]
+}
+
+class Ticket <<entity>> {
+    - id: int
+    - userId: int
+    - agentId: int
+    - serviceId: int
+    - servicePriority: Priority
+    - customerPriority: CustomerPriority
+    - finalPriority: int
+    - queuePosition: int
+    - status: TicketStatus
+    - createdAt: DateTime
+    - closedAt: DateTime
+    __
+    + calculateFinalPriority(): int
+    + updateStatus(status: TicketStatus): void
+    + assignAgent(agent: Agent): void
+    + addDocument(doc: UploadedDocument): void
+    + getLogs(): TicketLog[]
+    + getPayment(): Payment
+    + getDelivery(): Delivery
+}
+
+class Payment <<entity>> {
+    - id: int
+    - ticketId: int {unique}
+    - userId: int
+    - amount: float
+    - status: PaymentStatus
+    - paymentMethod: string
+    - transactionId: string
+    - paidAt: DateTime
+    - createdAt: DateTime
+    __
+    + processOnlinePayment(cardDetails: CardDetails): boolean
+    + processCashOnDelivery(): boolean
+    + generateReceipt(): Receipt
+    + isCompleted(): boolean
+}
+
+class Delivery <<entity>> {
+    - id: int
+    - ticketId: int {unique}
+    - address: string
+    - city: string
+    - phone: string
+    - status: DeliveryStatus
+    - trackingNumber: string
+    - agentName: string
+    - agentPhone: string
+    - estimatedDelivery: DateTime
+    - actualDelivery: DateTime
+    - notes: string
+    - createdAt: DateTime
+    - updatedAt: DateTime
+    __
+    + updateStatus(status: DeliveryStatus): void
+    + generateTrackingNumber(): string
+    + assignDeliveryAgent(name: string, phone: string): void
+    + setEstimatedDelivery(date: DateTime): void
+}
+
+class TicketLog <<entity>> {
+    - id: int
+    - ticketId: int
+    - message: string
+    - time: DateTime
+    __
+    + getFormattedLog(): string
+}
+
+class UploadedDocument <<entity>> {
+    - id: int
+    - ticketId: int
+    - filePath: string
+    - fileType: string
+    - uploadedAt: DateTime
+    __
+    + getDownloadUrl(): string
+    + validateFileType(): boolean
+}
+
+class RequiredDocument <<entity>> {
+    - id: int
+    - serviceId: int
+    - documentName: string
+    - description: string
+    - isMandatory: boolean
+    - createdAt: DateTime
+}
+
+class OTP <<entity>> {
+    - id: int
+    - email: string
+    - phoneNumber: string
+    - code: string
+    - expireAt: DateTime
+    - verified: boolean
+    - attempts: int
+    - metaData: string
+    - createdAt: DateTime
+    __
+    + isExpired(): boolean
+    + verify(inputCode: string): boolean
+    + incrementAttempts(): void
+    + isLocked(): boolean
+}
+
+class ChatbotLog <<entity>> {
+    - id: int
+    - userId: int
+    - question: string
+    - response: string
+    - createdAt: DateTime
+    - isHelpful: boolean
+}
+
+class Session <<entity>> {
+    - id: string
+    - sessionToken: string {unique}
+    - userId: string
+    - userType: string
+    - expires: DateTime
+    __
+    + isValid(): boolean
+    + refresh(): void
+}
+
+' ============================================
+' CONTROL CLASSES
+' ============================================
+class AuthController <<control>> {
+    + login(email: string, password: string): Session
+    + loginAgent(username: string, password: string): Session
+    + register(userData: UserData): User
+    + sendOTP(email: string): void
+    + verifyOTP(email: string, code: string): boolean
+    + logout(session: Session): void
+    - hashPassword(password: string): string
+    - validateCredentials(email: string, password: string): boolean
+}
+
+class TicketController <<control>> {
+    + createTicket(userId: int, serviceId: int, priority: CustomerPriority): Ticket
+    + assignAgent(ticket: Ticket): Agent
+    + updateStatus(ticketId: int, status: TicketStatus): Ticket
+    + calculateQueuePosition(ticket: Ticket): int
+    + recalculateAllPositions(): void
+    - findAvailableAgent(): Agent
+    - sendStatusNotification(ticket: Ticket): void
+}
+
+class PaymentController <<control>> {
+    + processPayment(ticketId: int, method: string, cardDetails: CardDetails): Payment
+    + verifyPayment(paymentId: int): boolean
+    + generateTransactionId(): string
+    + checkIdempotency(ticketId: int): boolean
+    - validateCardDetails(card: CardDetails): boolean
+    - sendPaymentConfirmation(payment: Payment): void
+}
+
+class DeliveryController <<control>> {
+    + createDelivery(ticketId: int, address: DeliveryInfo): Delivery
+    + updateStatus(deliveryId: int, status: DeliveryStatus): Delivery
+    + assignDeliveryAgent(deliveryId: int, agentInfo: AgentInfo): void
+    - sendDeliveryNotification(delivery: Delivery): void
+    - generateTrackingNumber(): string
+}
+
+class AdminController <<control>> {
+    + createAgent(agentData: AgentData): Agent
+    + deleteAgent(agentId: int): void
+    + createService(serviceData: ServiceData): Service
+    + getSystemStats(): SystemStats
+    + getAllUsers(): User[]
+    + getAllTickets(): Ticket[]
+    + getSystemLogs(): TicketLog[]
+}
+
+' ============================================
+' BOUNDARY CLASSES
+' ============================================
+class LoginForm <<boundary>> {
+    + displayLoginForm(): void
+    + submitCredentials(email: string, password: string): void
+    + showError(message: string): void
+    + redirectToDashboard(): void
+}
+
+class RegistrationForm <<boundary>> {
+    + displayRegistrationForm(): void
+    + submitRegistration(data: UserData): void
+    + displayOTPInput(): void
+    + showValidationErrors(errors: string[]): void
+}
+
+class TicketCreationForm <<boundary>> {
+    + displayServiceList(services: Service[]): void
+    + selectService(serviceId: int): void
+    + selectPriority(priority: CustomerPriority): void
+    + uploadDocuments(files: File[]): void
+    + enterDeliveryInfo(info: DeliveryInfo): void
+    + submitTicket(): void
+}
+
+class UserDashboard <<boundary>> {
+    + displayTickets(tickets: Ticket[]): void
+    + displayQueuePosition(position: int): void
+    + displayStatistics(stats: UserStats): void
+    + showPaymentOption(ticket: Ticket): void
+    + showDeliveryTracking(delivery: Delivery): void
+}
+
+class AgentDashboard <<boundary>> {
+    + displayAssignedTickets(tickets: Ticket[]): void
+    + displayAgentStats(stats: AgentStats): void
+    + updateTicketStatus(ticketId: int, status: TicketStatus): void
+    + updateDeliveryStatus(deliveryId: int, status: DeliveryStatus): void
+    + viewDocuments(ticketId: int): void
+}
+
+class AdminDashboard <<boundary>> {
+    + displaySystemOverview(stats: SystemStats): void
+    + displayUserList(users: User[]): void
+    + displayAgentList(agents: Agent[]): void
+    + displayAllTickets(tickets: Ticket[]): void
+    + displayPaymentReport(payments: Payment[]): void
+    + createNewAgent(data: AgentData): void
+    + createNewService(data: ServiceData): void
+}
+
+class PaymentForm <<boundary>> {
+    + displayPaymentMethods(): void
+    + selectMethod(method: string): void
+    + enterCardDetails(card: CardDetails): void
+    + submitPayment(): void
+    + displayReceipt(receipt: Receipt): void
+}
+
+class DeliveryTracker <<boundary>> {
+    + displayDeliveryTimeline(delivery: Delivery): void
+    + displayTrackingInfo(trackingNumber: string): void
+    + displayAgentInfo(agent: AgentInfo): void
+}
+
+' ============================================
+' DATA TRANSFER OBJECTS
+' ============================================
+class CardDetails <<value>> {
+    + cardNumber: string
+    + cvv: string
+    + expiryDate: string
+}
+
+class DeliveryInfo <<value>> {
+    + address: string
+    + city: string
+    + phone: string
+}
+
+' ============================================
+' RELATIONSHIPS - ASSOCIATIONS
+' ============================================
+User "1" -- "0..*" Ticket : creates >
+User "1" -- "0..*" Payment : makes >
+User "1" -- "0..*" ChatbotLog : generates >
+
+Agent "1" -- "0..*" Ticket : handles >
+
+Service "1" -- "0..*" Ticket : offered through >
+Service "1" -- "0..*" RequiredDocument : requires >
+
+' ============================================
+' RELATIONSHIPS - COMPOSITIONS
+' ============================================
+Ticket "1" *-- "1" Payment : has
+Ticket "1" *-- "0..1" Delivery : has
+Ticket "1" *-- "0..*" TicketLog : contains
+Ticket "1" *-- "0..*" UploadedDocument : contains
+
+' ============================================
+' RELATIONSHIPS - DEPENDENCIES
+' ============================================
+AuthController ..> User : uses
+AuthController ..> OTP : uses
+AuthController ..> Session : creates
+
+TicketController ..> Ticket : manages
+TicketController ..> Agent : queries
+TicketController ..> TicketLog : creates
+
+PaymentController ..> Payment : manages
+PaymentController ..> CardDetails : uses
+
+DeliveryController ..> Delivery : manages
+DeliveryController ..> DeliveryInfo : uses
+
+AdminController ..> User : manages
+AdminController ..> Agent : manages
+AdminController ..> Service : manages
+
+LoginForm ..> AuthController : uses
+RegistrationForm ..> AuthController : uses
+TicketCreationForm ..> TicketController : uses
+UserDashboard ..> TicketController : uses
+AgentDashboard ..> TicketController : uses
+AdminDashboard ..> AdminController : uses
+PaymentForm ..> PaymentController : uses
+DeliveryTracker ..> DeliveryController : uses
+
+@enduml

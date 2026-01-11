@@ -1,0 +1,262 @@
+@startuml NADRA_Sequence_Diagram
+
+skinparam sequenceMessageAlign center
+skinparam sequenceArrowThickness 2
+skinparam participantBorderColor #2196F3
+skinparam participantBackgroundColor #E3F2FD
+skinparam actorBorderColor #4CAF50
+skinparam noteBorderColor #FF9800
+
+title NADRA Citizen Portal - Sequence Diagram\nTicket Creation Use Case
+
+' ============================================
+' PARTICIPANTS
+' ============================================
+actor "Citizen" as Citizen #LightGreen
+boundary "TicketCreationForm\n<<boundary>>" as UI #FFCDD2
+control "TicketController\n<<control>>" as TC #FFE082
+control "PaymentController\n<<control>>" as PC #FFE082
+entity "Ticket\n<<entity>>" as Ticket #C8E6C9
+entity "Payment\n<<entity>>" as Payment #C8E6C9
+entity "Delivery\n<<entity>>" as Delivery #C8E6C9
+entity "Agent\n<<entity>>" as Agent #C8E6C9
+entity "TicketLog\n<<entity>>" as Log #C8E6C9
+participant "EmailService" as Email #BBDEFB
+database "Database\n(Prisma/MySQL)" as DB #E1BEE7
+
+' ============================================
+' SEQUENCE FLOW
+' ============================================
+
+== Ticket Creation Initiation ==
+
+Citizen -> UI : accessCreateTicketPage()
+activate UI
+UI -> TC : loadServices()
+activate TC
+TC -> DB : findMany(Service)
+activate DB
+DB --> TC : services[]
+deactivate DB
+TC --> UI : serviceList
+deactivate TC
+UI --> Citizen : displayServiceSelectionForm()
+
+== Service Selection ==
+
+Citizen -> UI : selectService(serviceId)
+UI -> UI : displayPriorityOptions()
+Citizen -> UI : selectPriority(URGENT/NORMAL)
+UI -> UI : displayDocumentUploadForm()
+
+== Document Upload ==
+
+Citizen -> UI : uploadDocuments(files[])
+activate UI
+UI -> TC : validateDocuments(files[])
+activate TC
+TC -> TC : checkFileTypes()
+TC -> TC : checkMandatoryDocs()
+TC --> UI : validationResult
+deactivate TC
+
+alt All mandatory documents provided
+    UI --> Citizen : showSuccess()
+else Missing mandatory documents
+    UI --> Citizen : showMissingDocumentsWarning()
+    Citizen -> UI : uploadMissingDocuments()
+end
+deactivate UI
+
+== Delivery Information ==
+
+Citizen -> UI : enterDeliveryInfo(address, city, phone)
+UI -> TC : validateDeliveryInfo()
+activate TC
+TC --> UI : validated
+deactivate TC
+
+== Ticket Submission ==
+
+Citizen -> UI : submitTicket()
+activate UI
+UI -> TC : createTicket(userId, serviceId, priority, documents, deliveryInfo)
+activate TC
+
+note right of TC
+  **Transaction Start**
+  All operations are atomic
+end note
+
+' Agent Assignment
+TC -> Agent : findAvailableAgent()
+activate Agent
+Agent -> DB : findMany(Agent, {orderBy: currentTickets})
+activate DB
+DB --> Agent : agents[]
+deactivate DB
+Agent -> Agent : filterByCapacity()
+Agent --> TC : selectedAgent | null
+deactivate Agent
+
+' Calculate Priority
+TC -> TC : calculateFinalPriority(servicePriority, customerPriority)
+note right
+  finalPriority = 
+  servicePriority + (URGENT ? -10 : 0)
+end note
+
+' Create Ticket
+TC -> Ticket : create(ticketData)
+activate Ticket
+Ticket -> DB : insert(Ticket)
+activate DB
+DB --> Ticket : ticketId
+deactivate DB
+Ticket --> TC : newTicket
+deactivate Ticket
+
+' Create Payment Record
+TC -> Payment : create(ticketId, userId, amount)
+activate Payment
+Payment -> DB : insert(Payment)
+activate DB
+DB --> Payment : paymentId
+deactivate DB
+Payment --> TC : newPayment
+deactivate Payment
+
+' Create Delivery Record
+TC -> Delivery : create(ticketId, deliveryInfo)
+activate Delivery
+Delivery -> DB : insert(Delivery)
+activate DB
+DB --> Delivery : deliveryId
+deactivate DB
+Delivery --> TC : newDelivery
+deactivate Delivery
+
+' Create Ticket Log
+TC -> Log : create(ticketId, "Ticket created")
+activate Log
+Log -> DB : insert(TicketLog)
+activate DB
+DB --> Log : logId
+deactivate DB
+Log --> TC : logCreated
+deactivate Log
+
+' Upload Documents
+loop for each document
+    TC -> DB : insert(UploadedDocument)
+    DB --> TC : documentId
+end
+
+' Calculate Queue Position
+TC -> TC : calculateQueuePosition()
+TC -> DB : count(Ticket, {status: OPEN, IN_PROGRESS})
+DB --> TC : position
+
+note right of TC
+  **Transaction Commit**
+end note
+
+' Send Notification
+TC ->> Email : sendTicketCreationEmail(user, ticket)
+activate Email
+Email --> TC : emailSent
+deactivate Email
+
+TC --> UI : ticketCreated(ticket, payment, delivery, queuePosition)
+deactivate TC
+
+UI --> Citizen : displayTicketSummary()
+deactivate UI
+
+== Payment Processing ==
+
+Citizen -> UI : selectPaymentMethod(ONLINE)
+activate UI
+UI -> UI : displayCardInputForm()
+Citizen -> UI : enterCardDetails(cardNumber, cvv, expiry)
+
+UI -> PC : processPayment(ticketId, cardDetails)
+activate PC
+
+PC -> PC : checkIdempotency(ticketId)
+
+alt Payment already completed
+    PC --> UI : 409 Conflict (Already Paid)
+else Payment pending
+    PC -> PC : validateCardDetails()
+    
+    alt Card valid
+        PC -> PC : generateTransactionId()
+        PC -> Payment : updateStatus(COMPLETED, transactionId)
+        activate Payment
+        Payment -> DB : update(Payment)
+        activate DB
+        DB --> Payment : updated
+        deactivate DB
+        Payment --> PC : paymentUpdated
+        deactivate Payment
+        
+        PC ->> Email : sendPaymentConfirmation(user, payment)
+        activate Email
+        Email --> PC : emailSent
+        deactivate Email
+        
+        PC --> UI : paymentSuccess(transactionId)
+    else Card invalid
+        PC --> UI : paymentFailed(errorMessage)
+    end
+end
+deactivate PC
+
+UI --> Citizen : displayPaymentResult()
+deactivate UI
+
+== Agent Notification ==
+
+TC ->> Email : sendAgentNotification(agent, ticket)
+activate Email
+note right of Email
+  Agent receives notification
+  about new ticket assignment
+end note
+Email --> TC : notificationSent
+deactivate Email
+
+== Queue Position Tracking ==
+
+loop Every 30 seconds
+    Citizen -> UI : refreshQueuePosition()
+    activate UI
+    UI -> TC : getQueuePosition(ticketId)
+    activate TC
+    TC -> DB : query(Ticket.queuePosition)
+    DB --> TC : currentPosition
+    TC --> UI : queuePosition
+    deactivate TC
+    UI --> Citizen : displayUpdatedPosition()
+    deactivate UI
+end
+
+' ============================================
+' LEGEND
+' ============================================
+legend right
+  |= Arrow |= Type |
+  | -> | Synchronous Message |
+  | ->> | Asynchronous Message |
+  | --> | Return Message |
+  | --- | Notes/Comments |
+  
+  |= Color |= Layer |
+  | Red | Boundary |
+  | Yellow | Control |
+  | Green | Entity |
+  | Purple | Database |
+endlegend
+
+@enduml
