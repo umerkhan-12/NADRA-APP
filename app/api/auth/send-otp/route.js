@@ -49,7 +49,8 @@
 // }
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import nodemailer from "nodemailer";
+import { getEmailTransporter } from "@/lib/emailTransporter";
+import bcrypt from "bcryptjs";
 
 export async function POST(req) {
   try {
@@ -85,12 +86,15 @@ export async function POST(req) {
     // Delete any existing OTPs for this email
     await prisma.OTP.deleteMany({ where: { email } });
 
+    // Hash password BEFORE storing in metaData (security: never store plain text passwords)
+    const hashedPassword = await bcrypt.hash(password, 10);
+
     // Store user data in metaData field for later use
     const metaData = JSON.stringify({
       name,
       email,
       phone: phone || null,
-      password, // Will be hashed during verification
+      password: hashedPassword, // Pre-hashed for security
     });
 
     // Create new OTP with expiration
@@ -103,14 +107,8 @@ export async function POST(req) {
       },
     });
 
-    // Email Transporter
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
+    // Use shared email transporter (connection pooling)
+    const transporter = getEmailTransporter();
 
     // Send OTP Email
     await transporter.sendMail({

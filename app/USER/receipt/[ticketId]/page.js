@@ -13,29 +13,29 @@ export default function ReceiptPage() {
   const receiptRef = useRef();
 
   useEffect(() => {
+    const fetchReceipt = async () => {
+      try {
+        const res = await fetch(`/api/payments/receipt/${params.ticketId}`);
+        const data = await res.json();
+
+        console.log("Receipt API Response:", data); // Debug log
+
+        if (data.success && data.receipt) {
+          setReceipt(data.receipt);
+        } else {
+          console.error("Receipt not found or API returned error:", data);
+          alert(`Unable to load receipt: ${data.error || "Receipt not found"}`);
+        }
+      } catch (error) {
+        console.error("Error fetching receipt:", error);
+        alert("Failed to fetch receipt. Please check console for details.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchReceipt();
   }, [params.ticketId]);
-
-  const fetchReceipt = async () => {
-    try {
-      const res = await fetch(`/api/payments/receipt/${params.ticketId}`);
-      const data = await res.json();
-      
-      console.log("Receipt API Response:", data); // Debug log
-      
-      if (data.success && data.receipt) {
-        setReceipt(data.receipt);
-      } else {
-        console.error("Receipt not found or API returned error:", data);
-        alert(`Unable to load receipt: ${data.error || "Receipt not found"}`);
-      }
-    } catch (error) {
-      console.error("Error fetching receipt:", error);
-      alert("Failed to fetch receipt. Please check console for details.");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handlePrint = useReactToPrint({
     content: () => receiptRef.current,

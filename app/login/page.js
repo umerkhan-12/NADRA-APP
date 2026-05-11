@@ -6,7 +6,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -264,7 +263,7 @@ export default function LoginPage() {
                 {/* Register Link */}
                 <div className="text-center pt-3 border-t border-white/10">
                   <p className="text-white/70 text-sm mb-2">
-                    Don't have an account?
+                    Don&apos;t have an account?
                   </p>
                   <a
                     href="/register"
@@ -280,23 +279,7 @@ export default function LoginPage() {
         </div>
       </div>
 
-      <style jsx>{`
-        @keyframes blob {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          25% { transform: translate(20px, -50px) scale(1.1); }
-          50% { transform: translate(-20px, 20px) scale(0.9); }
-          75% { transform: translate(50px, 50px) scale(1.05); }
-        }
-        .animate-blob {
-          animation: blob 7s infinite;
-        }
-        .animation-delay-2000 {
-          animation-delay: 2s;
-        }
-        .animation-delay-4000 {
-          animation-delay: 4s;
-        }
-      `}</style>
+      {/* Animations defined in globals.css */}
     </>
   );
 }

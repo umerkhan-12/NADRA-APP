@@ -26,48 +26,33 @@ export async function POST(req) {
 
 export async function GET() {
   try {
-    const totalVisitors = await prisma.visitorCount.count();
-
-    const uniqueVisitors = await prisma.visitorCount.groupBy({
-      by: ['ipAddress'],
-      _count: true,
-    });
-
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
-    const todayVisitors = await prisma.visitorCount.count({
-      where: {
-        visitedAt: {
-          gte: today,
-        },
-      },
-    });
-
     const weekAgo = new Date();
     weekAgo.setDate(weekAgo.getDate() - 7);
-    
-    const weekVisitors = await prisma.visitorCount.count({
-      where: {
-        visitedAt: {
-          gte: weekAgo,
-        },
-      },
-    });
 
-    const pageVisits = await prisma.visitorCount.groupBy({
-      by: ['page'],
-      _count: true,
-      orderBy: {
-        _count: {
-          page: 'desc',
-        },
-      },
-    });
+    // Run all queries in parallel for speed
+    const [totalVisitors, uniqueResult, todayVisitors, weekVisitors, pageVisits] = await Promise.all([
+      prisma.visitorCount.count(),
+      // Use raw query for COUNT(DISTINCT) — much faster than groupBy loading all records
+      prisma.$queryRaw`SELECT COUNT(DISTINCT ipAddress) as count FROM VisitorCount`,
+      prisma.visitorCount.count({
+        where: { visitedAt: { gte: today } },
+      }),
+      prisma.visitorCount.count({
+        where: { visitedAt: { gte: weekAgo } },
+      }),
+      prisma.visitorCount.groupBy({
+        by: ['page'],
+        _count: true,
+        orderBy: { _count: { page: 'desc' } },
+      }),
+    ]);
 
     return NextResponse.json({
       totalVisitors,
-      uniqueVisitors: uniqueVisitors.length,
+      uniqueVisitors: Number(uniqueResult[0]?.count || 0),
       todayVisitors,
       weekVisitors,
       pageVisits,

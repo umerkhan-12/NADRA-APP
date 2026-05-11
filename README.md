@@ -23,9 +23,10 @@ A **production-ready**, full-stack **NADRA service management platform** featuri
 💳 **Payment Integration** - Online and cash-on-delivery payment processing  
 🚚 **Delivery Tracking** - Real-time delivery status with email notifications  
 📊 **Advanced Dashboard** - Beautiful, responsive dashboards for all user roles  
-⚡ **Optimized Performance** - Database indexes, transactions, and query optimization  
+⚡ **Optimized Performance** - Database indexes, transactions, job queues, and query optimization  
 🔒 **Security Hardened** - Rate limiting, idempotency, and data integrity  
 🎨 **Modern UI/UX** - Gradient themes with smooth animations and glassmorphism
+📧 **Async Email Queue** - Reliable email delivery with automatic retries via Bull
 
 ---
 
@@ -46,6 +47,8 @@ A **production-ready**, full-stack **NADRA service management platform** featuri
 - **MySQL 8.0** - Production-grade relational database
 - **Nodemailer** - Email notifications via Gmail SMTP
 - **bcryptjs** - Industry-standard password hashing
+- **Bull/BullMQ** - Async job queue for reliable email delivery (NEW!)
+- **Redis** - In-memory cache and job queue persistence (NEW!)
 
 ### **Development Tools**
 - **TypeScript** - Type safety for better code quality
@@ -66,6 +69,7 @@ A **production-ready**, full-stack **NADRA service management platform** featuri
 - [API Documentation](#-api-documentation)
 - [Security Features](#-security-features)
 - [Performance Optimizations](#-performance-optimizations)
+- [Performance Guide (NEW!)](#-performance-guide-new) 
 - [Contributing](#-contributing)
 - [License](#-license)
 

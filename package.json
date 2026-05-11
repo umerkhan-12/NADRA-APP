@@ -7,7 +7,9 @@
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "analyze:indexes": "node scripts/analyzeIndexes.js",
+    "benchmark:queries": "node scripts/benchmarkQueries.js"
   },
   "dependencies": {
     "@next-auth/prisma-adapter": "^1.0.7",
@@ -19,6 +21,7 @@
     "@radix-ui/react-separator": "^1.1.8",
     "@radix-ui/react-slot": "^1.2.4",
     "bcryptjs": "^3.0.3",
+    "bullmq": "^5.11.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.553.0",
@@ -30,6 +33,7 @@
     "react-dom": "19.2.0",
     "react-hot-toast": "^2.6.0",
     "react-to-print": "^3.2.0",
+    "redis": "^4.7.0",
     "tailwind-merge": "^3.4.0"
   },
   "devDependencies": {

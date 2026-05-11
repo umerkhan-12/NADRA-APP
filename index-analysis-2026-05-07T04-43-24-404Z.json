@@ -1,0 +1,683 @@
+{
+  "generatedAt": "2026-05-07T04:43:24.388Z",
+  "database": "nadradb",
+  "totals": {
+    "tables": 16,
+    "indexes": 43,
+    "unusedIndexes": 0,
+    "wideIndexes": 0,
+    "missingIndexes": 0
+  },
+  "tables": [
+    {
+      "schema": "nadradb",
+      "table": "_prisma_migrations",
+      "rows": 14,
+      "dataLength": 16384,
+      "indexLength": 0,
+      "indexes": [
+        {
+          "schema": "nadradb",
+          "table": "_prisma_migrations",
+          "name": "PRIMARY",
+          "isUnique": true,
+          "type": "BTREE",
+          "columns": [
+            "id"
+          ],
+          "reads": null,
+          "writes": null
+        }
+      ]
+    },
+    {
+      "schema": "nadradb",
+      "table": "account",
+      "rows": 0,
+      "dataLength": 16384,
+      "indexLength": 16384,
+      "indexes": [
+        {
+          "schema": "nadradb",
+          "table": "account",
+          "name": "Account_provider_providerAccountId_key",
+          "isUnique": true,
+          "type": "BTREE",
+          "columns": [
+            "provider",
+            "providerAccountId"
+          ],
+          "reads": null,
+          "writes": null
+        },
+        {
+          "schema": "nadradb",
+          "table": "account",
+          "name": "PRIMARY",
+          "isUnique": true,
+          "type": "BTREE",
+          "columns": [
+            "id"
+          ],
+          "reads": null,
+          "writes": null
+        }
+      ]
+    },
+    {
+      "schema": "nadradb",
+      "table": "agent",
+      "rows": 2,
+      "dataLength": 16384,
+      "indexLength": 32768,
+      "indexes": [
+        {
+          "schema": "nadradb",
+          "table": "agent",
+          "name": "Agent_email_key",
+          "isUnique": true,
+          "type": "BTREE",
+          "columns": [
+            "email"
+          ],
+          "reads": null,
+          "writes": null
+        },
+        {
+          "schema": "nadradb",
+          "table": "agent",
+          "name": "Agent_username_key",
+          "isUnique": true,
+          "type": "BTREE",
+          "columns": [
+            "username"
+          ],
+          "reads": null,
+          "writes": null
+        },
+        {
+          "schema": "nadradb",
+          "table": "agent",
+          "name": "PRIMARY",
+          "isUnique": true,
+          "type": "BTREE",
+          "columns": [
+            "id"
+          ],
+          "reads": null,
+          "writes": null
+        }
+      ]
+    },
+    {
+      "schema": "nadradb",
+      "table": "chatbotlog",
+      "rows": 0,
+      "dataLength": 16384,
+      "indexLength": 16384,
+      "indexes": [
+        {
+          "schema": "nadradb",
+          "table": "chatbotlog",
+          "name": "ChatbotLog_userId_fkey",
+          "isUnique": false,
+          "type": "BTREE",
+          "columns": [
+            "userId"
+          ],
+          "reads": null,
+          "writes": null
+        },
+        {
+          "schema": "nadradb",
+          "table": "chatbotlog",
+          "name": "PRIMARY",
+          "isUnique": true,
+          "type": "BTREE",
+          "columns": [
+            "id"
+          ],
+          "reads": null,
+          "writes": null
+        }
+      ]
+    },
+    {
+      "schema": "nadradb",
+      "table": "delivery",
+      "rows": 2,
+      "dataLength": 16384,
+      "indexLength": 49152,
+      "indexes": [
+        {
+          "schema": "nadradb",
+          "table": "delivery",
+          "name": "Delivery_status_idx",
+          "isUnique": false,
+          "type": "BTREE",
+          "columns": [
+            "status"
+          ],
+          "reads": null,
+          "writes": null
+        },
+        {
+          "schema": "nadradb",
+          "table": "delivery",
+          "name": "Delivery_ticketId_key",
+          "isUnique": true,
+          "type": "BTREE",
+          "columns": [
+            "ticketId"
+          ],
+          "reads": null,
+          "writes": null
+        },
+        {
+          "schema": "nadradb",
+          "table": "delivery",
+          "name": "Delivery_trackingNumber_idx",
+          "isUnique": false,
+          "type": "BTREE",
+          "columns": [
+            "trackingNumber"
+          ],
+          "reads": null,
+          "writes": null
+        },
+        {
+          "schema": "nadradb",
+          "table": "delivery",
+          "name": "PRIMARY",
+          "isUnique": true,
+          "type": "BTREE",
+          "columns": [
+            "id"
+          ],
+          "reads": null,
+          "writes": null
+        }
+      ]
+    },
+    {
+      "schema": "nadradb",
+      "table": "otp",
+      "rows": 1,
+      "dataLength": 16384,
+      "indexLength": 32768,
+      "indexes": [
+        {
+          "schema": "nadradb",
+          "table": "otp",
+          "name": "OTP_email_code_idx",
+          "isUnique": false,
+          "type": "BTREE",
+          "columns": [
+            "email",
+            "code"
+          ],
+          "reads": null,
+          "writes": null
+        },
+        {
+          "schema": "nadradb",
+          "table": "otp",
+          "name": "OTP_expireat_idx",
+          "isUnique": false,
+          "type": "BTREE",
+          "columns": [
+            "expireat"
+          ],
+          "reads": null,
+          "writes": null
+        },
+        {
+          "schema": "nadradb",
+          "table": "otp",
+          "name": "PRIMARY",
+          "isUnique": true,
+          "type": "BTREE",
+          "columns": [
+            "id"
+          ],
+          "reads": null,
+          "writes": null
+        }
+      ]
+    },
+    {
+      "schema": "nadradb",
+      "table": "payment",
+      "rows": 14,
+      "dataLength": 16384,
+      "indexLength": 49152,
+      "indexes": [
+        {
+          "schema": "nadradb",
+          "table": "payment",
+          "name": "Payment_status_idx",
+          "isUnique": false,
+          "type": "BTREE",
+          "columns": [
+            "status"
+          ],
+          "reads": null,
+          "writes": null
+        },
+        {
+          "schema": "nadradb",
+          "table": "payment",
+          "name": "Payment_ticketId_key",
+          "isUnique": true,
+          "type": "BTREE",
+          "columns": [
+            "ticketId"
+          ],
+          "reads": null,
+          "writes": null
+        },
+        {
+          "schema": "nadradb",
+          "table": "payment",
+          "name": "Payment_userId_idx",
+          "isUnique": false,
+          "type": "BTREE",
+          "columns": [
+            "userId"
+          ],
+          "reads": null,
+          "writes": null
+        },
+        {
+          "schema": "nadradb",
+          "table": "payment",
+          "name": "PRIMARY",
+          "isUnique": true,
+          "type": "BTREE",
+          "columns": [
+            "id"
+          ],
+          "reads": null,
+          "writes": null
+        }
+      ]
+    },
+    {
+      "schema": "nadradb",
+      "table": "requireddocument",
+      "rows": 79,
+      "dataLength": 16384,
+      "indexLength": 16384,
+      "indexes": [
+        {
+          "schema": "nadradb",
+          "table": "requireddocument",
+          "name": "PRIMARY",
+          "isUnique": true,
+          "type": "BTREE",
+          "columns": [
+            "id"
+          ],
+          "reads": null,
+          "writes": null
+        },
+        {
+          "schema": "nadradb",
+          "table": "requireddocument",
+          "name": "RequiredDocument_serviceId_fkey",
+          "isUnique": false,
+          "type": "BTREE",
+          "columns": [
+            "serviceId"
+          ],
+          "reads": null,
+          "writes": null
+        }
+      ]
+    },
+    {
+      "schema": "nadradb",
+      "table": "service",
+      "rows": 13,
+      "dataLength": 16384,
+      "indexLength": 0,
+      "indexes": [
+        {
+          "schema": "nadradb",
+          "table": "service",
+          "name": "PRIMARY",
+          "isUnique": true,
+          "type": "BTREE",
+          "columns": [
+            "id"
+          ],
+          "reads": null,
+          "writes": null
+        }
+      ]
+    },
+    {
+      "schema": "nadradb",
+      "table": "session",
+      "rows": 0,
+      "dataLength": 16384,
+      "indexLength": 16384,
+      "indexes": [
+        {
+          "schema": "nadradb",
+          "table": "session",
+          "name": "PRIMARY",
+          "isUnique": true,
+          "type": "BTREE",
+          "columns": [
+            "id"
+          ],
+          "reads": null,
+          "writes": null
+        },
+        {
+          "schema": "nadradb",
+          "table": "session",
+          "name": "Session_sessionToken_key",
+          "isUnique": true,
+          "type": "BTREE",
+          "columns": [
+            "sessionToken"
+          ],
+          "reads": null,
+          "writes": null
+        }
+      ]
+    },
+    {
+      "schema": "nadradb",
+      "table": "ticket",
+      "rows": 14,
+      "dataLength": 16384,
+      "indexLength": 98304,
+      "indexes": [
+        {
+          "schema": "nadradb",
+          "table": "ticket",
+          "name": "PRIMARY",
+          "isUnique": true,
+          "type": "BTREE",
+          "columns": [
+            "id"
+          ],
+          "reads": null,
+          "writes": null
+        },
+        {
+          "schema": "nadradb",
+          "table": "ticket",
+          "name": "Ticket_agentId_status_idx",
+          "isUnique": false,
+          "type": "BTREE",
+          "columns": [
+            "agentId",
+            "status"
+          ],
+          "reads": null,
+          "writes": null
+        },
+        {
+          "schema": "nadradb",
+          "table": "ticket",
+          "name": "Ticket_customerPriority_finalPriority_createdAt_idx",
+          "isUnique": false,
+          "type": "BTREE",
+          "columns": [
+            "customerPriority",
+            "finalPriority",
+            "createdAt"
+          ],
+          "reads": null,
+          "writes": null
+        },
+        {
+          "schema": "nadradb",
+          "table": "ticket",
+          "name": "Ticket_queuePosition_idx",
+          "isUnique": false,
+          "type": "BTREE",
+          "columns": [
+            "queuePosition"
+          ],
+          "reads": null,
+          "writes": null
+        },
+        {
+          "schema": "nadradb",
+          "table": "ticket",
+          "name": "Ticket_serviceId_fkey",
+          "isUnique": false,
+          "type": "BTREE",
+          "columns": [
+            "serviceId"
+          ],
+          "reads": null,
+          "writes": null
+        },
+        {
+          "schema": "nadradb",
+          "table": "ticket",
+          "name": "Ticket_status_idx",
+          "isUnique": false,
+          "type": "BTREE",
+          "columns": [
+            "status"
+          ],
+          "reads": null,
+          "writes": null
+        },
+        {
+          "schema": "nadradb",
+          "table": "ticket",
+          "name": "Ticket_userId_createdAt_idx",
+          "isUnique": false,
+          "type": "BTREE",
+          "columns": [
+            "userId",
+            "createdAt"
+          ],
+          "reads": null,
+          "writes": null
+        }
+      ]
+    },
+    {
+      "schema": "nadradb",
+      "table": "ticketlog",
+      "rows": 18,
+      "dataLength": 16384,
+      "indexLength": 16384,
+      "indexes": [
+        {
+          "schema": "nadradb",
+          "table": "ticketlog",
+          "name": "PRIMARY",
+          "isUnique": true,
+          "type": "BTREE",
+          "columns": [
+            "id"
+          ],
+          "reads": null,
+          "writes": null
+        },
+        {
+          "schema": "nadradb",
+          "table": "ticketlog",
+          "name": "TicketLog_ticketId_idx",
+          "isUnique": false,
+          "type": "BTREE",
+          "columns": [
+            "ticketId"
+          ],
+          "reads": null,
+          "writes": null
+        }
+      ]
+    },
+    {
+      "schema": "nadradb",
+      "table": "uploadeddocument",
+      "rows": 0,
+      "dataLength": 16384,
+      "indexLength": 16384,
+      "indexes": [
+        {
+          "schema": "nadradb",
+          "table": "uploadeddocument",
+          "name": "PRIMARY",
+          "isUnique": true,
+          "type": "BTREE",
+          "columns": [
+            "id"
+          ],
+          "reads": null,
+          "writes": null
+        },
+        {
+          "schema": "nadradb",
+          "table": "uploadeddocument",
+          "name": "UploadedDocument_ticketId_idx",
+          "isUnique": false,
+          "type": "BTREE",
+          "columns": [
+            "ticketId"
+          ],
+          "reads": null,
+          "writes": null
+        }
+      ]
+    },
+    {
+      "schema": "nadradb",
+      "table": "user",
+      "rows": 3,
+      "dataLength": 16384,
+      "indexLength": 32768,
+      "indexes": [
+        {
+          "schema": "nadradb",
+          "table": "user",
+          "name": "PRIMARY",
+          "isUnique": true,
+          "type": "BTREE",
+          "columns": [
+            "id"
+          ],
+          "reads": null,
+          "writes": null
+        },
+        {
+          "schema": "nadradb",
+          "table": "user",
+          "name": "User_cnic_key",
+          "isUnique": true,
+          "type": "BTREE",
+          "columns": [
+            "cnic"
+          ],
+          "reads": null,
+          "writes": null
+        },
+        {
+          "schema": "nadradb",
+          "table": "user",
+          "name": "User_email_key",
+          "isUnique": true,
+          "type": "BTREE",
+          "columns": [
+            "email"
+          ],
+          "reads": null,
+          "writes": null
+        }
+      ]
+    },
+    {
+      "schema": "nadradb",
+      "table": "verificationtoken",
+      "rows": 0,
+      "dataLength": 16384,
+      "indexLength": 16384,
+      "indexes": [
+        {
+          "schema": "nadradb",
+          "table": "verificationtoken",
+          "name": "VerificationToken_identifier_token_key",
+          "isUnique": true,
+          "type": "BTREE",
+          "columns": [
+            "identifier",
+            "token"
+          ],
+          "reads": null,
+          "writes": null
+        },
+        {
+          "schema": "nadradb",
+          "table": "verificationtoken",
+          "name": "VerificationToken_token_key",
+          "isUnique": true,
+          "type": "BTREE",
+          "columns": [
+            "token"
+          ],
+          "reads": null,
+          "writes": null
+        }
+      ]
+    },
+    {
+      "schema": "nadradb",
+      "table": "visitorcount",
+      "rows": 27,
+      "dataLength": 16384,
+      "indexLength": 32768,
+      "indexes": [
+        {
+          "schema": "nadradb",
+          "table": "visitorcount",
+          "name": "PRIMARY",
+          "isUnique": true,
+          "type": "BTREE",
+          "columns": [
+            "id"
+          ],
+          "reads": null,
+          "writes": null
+        },
+        {
+          "schema": "nadradb",
+          "table": "visitorcount",
+          "name": "VisitorCount_ipAddress_idx",
+          "isUnique": false,
+          "type": "BTREE",
+          "columns": [
+            "ipAddress"
+          ],
+          "reads": null,
+          "writes": null
+        },
+        {
+          "schema": "nadradb",
+          "table": "visitorcount",
+          "name": "VisitorCount_visitedAt_idx",
+          "isUnique": false,
+          "type": "BTREE",
+          "columns": [
+            "visitedAt"
+          ],
+          "reads": null,
+          "writes": null
+        }
+      ]
+    }
+  ],
+  "unusedIndexes": [],
+  "wideIndexes": [],
+  "missingIndexes": []
+}

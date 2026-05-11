@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import nodemailer from "nodemailer";
+import { queueEmail } from "@/lib/jobQueue";
 
 export async function POST(req) {
   try {
@@ -105,37 +105,26 @@ export async function POST(req) {
       });
     });
 
-    // Simulate payment processing delay AFTER transaction
-    await new Promise((resolve) => setTimeout(resolve, 2000));
 
-    // Send confirmation email (non-blocking)
-    setImmediate(async () => {
-      try {
-        const transporter = nodemailer.createTransport({
-          service: "gmail",
-          auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS,
-          },
-        });
-
-        const emailSubject =
-          paymentMethod === "ONLINE"
-            ? `Payment Confirmed - Ticket #${ticketId}`
-            : `Payment Pending (COD) - Ticket #${ticketId}`;
-
-        const emailContent =
-          paymentMethod === "ONLINE"
-            ? `
+    // Queue confirmation email (non-blocking)
+    queueEmail({
+      to: updatedPayment.user.email,
+      subject:
+        paymentMethod === "ONLINE"
+          ? `Payment Confirmed - Ticket #${ticketId}`
+          : `Payment Pending (COD) - Ticket #${ticketId}`,
+      html:
+        paymentMethod === "ONLINE"
+          ? `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <h2 style="color: #047857;">✅ Payment Successful</h2>
-            <p>Dear ${payment.user.name},</p>
+            <p>Dear ${updatedPayment.user.name},</p>
             <p>Your payment has been successfully processed.</p>
             <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
               <p><strong>Transaction ID:</strong> ${updatedPayment.transactionId}</p>
               <p><strong>Ticket ID:</strong> #${ticketId}</p>
-              <p><strong>Service:</strong> ${payment.ticket.service.name}</p>
-              <p><strong>Amount:</strong> Rs. ${payment.amount.toFixed(2)}</p>
+              <p><strong>Service:</strong> ${updatedPayment.ticket.service.name}</p>
+              <p><strong>Amount:</strong> Rs. ${updatedPayment.amount.toFixed(2)}</p>
               <p><strong>Payment Method:</strong> Online Card Payment</p>
               <p><strong>Status:</strong> Completed</p>
             </div>
@@ -144,15 +133,15 @@ export async function POST(req) {
             <p style="color: #6b7280; font-size: 12px;">This is an automated message from NADRA Citizen Portal.</p>
           </div>
         `
-            : `
+          : `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <h2 style="color: #2563EB;">📦 Cash on Delivery Selected</h2>
-            <p>Dear ${payment.user.name},</p>
+            <p>Dear ${updatedPayment.user.name},</p>
             <p>You have selected Cash on Delivery for your service.</p>
             <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
               <p><strong>Ticket ID:</strong> #${ticketId}</p>
-              <p><strong>Service:</strong> ${payment.ticket.service.name}</p>
-              <p><strong>Amount to Pay:</strong> Rs. ${payment.amount.toFixed(2)}</p>
+              <p><strong>Service:</strong> ${updatedPayment.ticket.service.name}</p>
+              <p><strong>Amount to Pay:</strong> Rs. ${updatedPayment.amount.toFixed(2)}</p>
               <p><strong>Payment Method:</strong> Cash on Delivery</p>
               <p><strong>Status:</strong> Pending (Pay when you receive documents)</p>
             </div>
@@ -160,18 +149,8 @@ export async function POST(req) {
             <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
             <p style="color: #6b7280; font-size: 12px;">This is an automated message from NADRA Citizen Portal.</p>
           </div>
-        `;
-
-        await transporter.sendMail({
-          from: process.env.EMAIL_USER,
-          to: payment.user.email,
-          subject: emailSubject,
-          html: emailContent,
-        });
-      } catch (emailErr) {
-        console.error("Email failed:", emailErr);
-      }
-    });
+        `,
+    }).catch((err) => console.error("Failed to queue email:", err.message));
 
     return NextResponse.json({
       success: true,

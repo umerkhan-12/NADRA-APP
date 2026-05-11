@@ -5,7 +5,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -269,7 +268,7 @@ export default function RegisterPage() {
                       <div>
                         <p className="text-white font-semibold text-sm">OTP Sent!</p>
                         <p className="text-white/80 text-xs mt-1">
-                          We've sent a 6-digit code to <span className="font-semibold">{form.email}</span>
+                          We&apos;ve sent a 6-digit code to <span className="font-semibold">{form.email}</span>
                         </p>
                       </div>
                     </div>
@@ -319,7 +318,7 @@ export default function RegisterPage() {
                       }}
                       className="text-white/80 text-sm hover:text-white hover:underline transition-all"
                     >
-                      Didn't receive the code? Resend OTP
+                      Didn&apos;t receive the code? Resend OTP
                     </button>
                   </div>
                 </form>
@@ -329,23 +328,7 @@ export default function RegisterPage() {
         </div>
       </div>
 
-      <style jsx>{`
-        @keyframes blob {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          25% { transform: translate(20px, -50px) scale(1.1); }
-          50% { transform: translate(-20px, 20px) scale(0.9); }
-          75% { transform: translate(50px, 50px) scale(1.05); }
-        }
-        .animate-blob {
-          animation: blob 7s infinite;
-        }
-        .animation-delay-2000 {
-          animation-delay: 2s;
-        }
-        .animation-delay-4000 {
-          animation-delay: 4s;
-        }
-      `}</style>
+      {/* Animations defined in globals.css */}
     </>
   );
 }

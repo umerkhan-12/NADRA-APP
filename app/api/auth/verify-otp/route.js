@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import bcrypt from "bcryptjs";
 
 export async function POST(req) {
   try {
@@ -32,6 +31,7 @@ export async function POST(req) {
     try {
       userData = JSON.parse(otpRecord.metaData || "{}");
     } catch (err) {
+      console.error("OTP metadata parse error:", err);
       return NextResponse.json({ 
         success: false, 
         error: "Invalid registration data. Please start over." 
@@ -60,8 +60,8 @@ export async function POST(req) {
       });
     }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // Password is already hashed in metaData (pre-hashed by send-otp for security)
+    const hashedPassword = password;
 
     // Create new user
     await prisma.user.create({

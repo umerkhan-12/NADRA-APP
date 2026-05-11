@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import nodemailer from "nodemailer";
+import { queueEmail } from "@/lib/jobQueue";
 
 export async function PATCH(req, context) {
   try {
@@ -66,99 +66,84 @@ export async function PATCH(req, context) {
       }
     });
 
-    // Send email notification for status changes
+    // Queue email notification for status changes
     if (status && status !== delivery.status) {
-      setImmediate(async () => {
-        try {
-          const transporter = nodemailer.createTransport({
-            service: "gmail",
-            auth: {
-              user: process.env.EMAIL_USER,
-              pass: process.env.EMAIL_PASS,
-            },
-          });
+      let emailSubject = "";
+      let emailContent = "";
 
-          let emailSubject = "";
-          let emailContent = "";
+      switch (status) {
+        case "DISPATCHED":
+          emailSubject = `📦 Your Order Has Been Dispatched - Ticket #${delivery.ticket.id}`;
+          emailContent = `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2 style="color: #047857;">📦 Order Dispatched!</h2>
+              <p>Dear ${delivery.ticket.user.name},</p>
+              <p>Great news! Your document order has been dispatched and is on its way to you.</p>
+              <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <p><strong>Ticket ID:</strong> #${delivery.ticket.id}</p>
+                <p><strong>Service:</strong> ${delivery.ticket.service.name}</p>
+                ${trackingNumber ? `<p><strong>Tracking Number:</strong> ${trackingNumber}</p>` : ''}
+                ${agentName ? `<p><strong>Delivery Agent:</strong> ${agentName}</p>` : ''}
+                ${agentPhone ? `<p><strong>Agent Contact:</strong> ${agentPhone}</p>` : ''}
+                ${estimatedDelivery ? `<p><strong>Estimated Delivery:</strong> ${new Date(estimatedDelivery).toLocaleDateString()}</p>` : ''}
+                <p><strong>Delivery Address:</strong> ${delivery.address}, ${delivery.city}</p>
+              </div>
+              <p>Your documents will arrive soon. Our delivery agent will contact you shortly.</p>
+              <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
+              <p style="color: #6b7280; font-size: 12px;">This is an automated message from NADRA Citizen Portal.</p>
+            </div>
+          `;
+          break;
 
-          switch (status) {
-            case "DISPATCHED":
-              emailSubject = `📦 Your Order Has Been Dispatched - Ticket #${delivery.ticket.id}`;
-              emailContent = `
-                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                  <h2 style="color: #047857;">📦 Order Dispatched!</h2>
-                  <p>Dear ${delivery.ticket.user.name},</p>
-                  <p>Great news! Your document order has been dispatched and is on its way to you.</p>
-                  <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                    <p><strong>Ticket ID:</strong> #${delivery.ticket.id}</p>
-                    <p><strong>Service:</strong> ${delivery.ticket.service.name}</p>
-                    ${trackingNumber ? `<p><strong>Tracking Number:</strong> ${trackingNumber}</p>` : ''}
-                    ${agentName ? `<p><strong>Delivery Agent:</strong> ${agentName}</p>` : ''}
-                    ${agentPhone ? `<p><strong>Agent Contact:</strong> ${agentPhone}</p>` : ''}
-                    ${estimatedDelivery ? `<p><strong>Estimated Delivery:</strong> ${new Date(estimatedDelivery).toLocaleDateString()}</p>` : ''}
-                    <p><strong>Delivery Address:</strong> ${delivery.address}, ${delivery.city}</p>
-                  </div>
-                  <p>Your documents will arrive soon. Our delivery agent will contact you shortly.</p>
-                  <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
-                  <p style="color: #6b7280; font-size: 12px;">This is an automated message from NADRA Citizen Portal.</p>
-                </div>
-              `;
-              break;
+        case "IN_TRANSIT":
+          emailSubject = `🚚 Your Order Is Out for Delivery - Ticket #${delivery.ticket.id}`;
+          emailContent = `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2 style="color: #2563EB;">🚚 Out for Delivery!</h2>
+              <p>Dear ${delivery.ticket.user.name},</p>
+              <p>Your document order is now out for delivery and will reach you soon.</p>
+              <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <p><strong>Ticket ID:</strong> #${delivery.ticket.id}</p>
+                ${trackingNumber ? `<p><strong>Tracking Number:</strong> ${trackingNumber}</p>` : ''}
+                ${agentName ? `<p><strong>Delivery Agent:</strong> ${agentName}</p>` : ''}
+                ${agentPhone ? `<p><strong>Agent Contact:</strong> ${agentPhone}</p>` : ''}
+                <p><strong>Delivery Address:</strong> ${delivery.address}, ${delivery.city}</p>
+              </div>
+              <p><strong>Please keep the payment ready if you selected Cash on Delivery.</strong></p>
+              <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
+              <p style="color: #6b7280; font-size: 12px;">This is an automated message from NADRA Citizen Portal.</p>
+            </div>
+          `;
+          break;
 
-            case "IN_TRANSIT":
-              emailSubject = `🚚 Your Order Is Out for Delivery - Ticket #${delivery.ticket.id}`;
-              emailContent = `
-                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                  <h2 style="color: #2563EB;">🚚 Out for Delivery!</h2>
-                  <p>Dear ${delivery.ticket.user.name},</p>
-                  <p>Your document order is now out for delivery and will reach you soon.</p>
-                  <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                    <p><strong>Ticket ID:</strong> #${delivery.ticket.id}</p>
-                    ${trackingNumber ? `<p><strong>Tracking Number:</strong> ${trackingNumber}</p>` : ''}
-                    ${agentName ? `<p><strong>Delivery Agent:</strong> ${agentName}</p>` : ''}
-                    ${agentPhone ? `<p><strong>Agent Contact:</strong> ${agentPhone}</p>` : ''}
-                    <p><strong>Delivery Address:</strong> ${delivery.address}, ${delivery.city}</p>
-                  </div>
-                  <p><strong>Please keep the payment ready if you selected Cash on Delivery.</strong></p>
-                  <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
-                  <p style="color: #6b7280; font-size: 12px;">This is an automated message from NADRA Citizen Portal.</p>
-                </div>
-              `;
-              break;
+        case "DELIVERED":
+          emailSubject = `✅ Your Order Has Been Delivered - Ticket #${delivery.ticket.id}`;
+          emailContent = `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2 style="color: #059669;">✅ Order Delivered Successfully!</h2>
+              <p>Dear ${delivery.ticket.user.name},</p>
+              <p>Your document order has been successfully delivered.</p>
+              <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <p><strong>Ticket ID:</strong> #${delivery.ticket.id}</p>
+                <p><strong>Service:</strong> ${delivery.ticket.service.name}</p>
+                <p><strong>Delivered At:</strong> ${new Date().toLocaleString()}</p>
+                <p><strong>Delivery Address:</strong> ${delivery.address}, ${delivery.city}</p>
+              </div>
+              <p>Thank you for using NADRA services. We hope we served you well!</p>
+              <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
+              <p style="color: #6b7280; font-size: 12px;">This is an automated message from NADRA Citizen Portal.</p>
+            </div>
+          `;
+          break;
+      }
 
-            case "DELIVERED":
-              emailSubject = `✅ Your Order Has Been Delivered - Ticket #${delivery.ticket.id}`;
-              emailContent = `
-                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                  <h2 style="color: #059669;">✅ Order Delivered Successfully!</h2>
-                  <p>Dear ${delivery.ticket.user.name},</p>
-                  <p>Your document order has been successfully delivered.</p>
-                  <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                    <p><strong>Ticket ID:</strong> #${delivery.ticket.id}</p>
-                    <p><strong>Service:</strong> ${delivery.ticket.service.name}</p>
-                    <p><strong>Delivered At:</strong> ${new Date().toLocaleString()}</p>
-                    <p><strong>Delivery Address:</strong> ${delivery.address}, ${delivery.city}</p>
-                  </div>
-                  <p>Thank you for using NADRA services. We hope we served you well!</p>
-                  <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
-                  <p style="color: #6b7280; font-size: 12px;">This is an automated message from NADRA Citizen Portal.</p>
-                </div>
-              `;
-              break;
-          }
-
-          if (emailSubject && emailContent) {
-            await transporter.sendMail({
-              from: process.env.EMAIL_USER,
-              to: delivery.ticket.user.email,
-              subject: emailSubject,
-              html: emailContent,
-            });
-          }
-        } catch (emailErr) {
-          console.error("Delivery notification email failed:", emailErr);
-        }
-      });
+      if (emailSubject && emailContent) {
+        queueEmail({
+          to: delivery.ticket.user.email,
+          subject: emailSubject,
+          html: emailContent,
+        }).catch((err) => console.error("Failed to queue delivery email:", err.message));
+      }
     }
 
     return NextResponse.json({

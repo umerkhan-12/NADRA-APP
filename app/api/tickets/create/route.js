@@ -6,7 +6,7 @@ export async function POST(req) {
   try {
     const { serviceId, customerPriority, userId } = await req.json();
 
-    console.log("Ticket Create - Received data:", { serviceId, customerPriority, userId }); // Debug
+
 
     if (!serviceId || !customerPriority || !userId) {
       return NextResponse.json(
@@ -18,8 +18,7 @@ export async function POST(req) {
     // Use the helper to create ticket
     const ticket = await createTicket({ serviceId, customerPriority, userId });
 
-    console.log("Ticket created successfully:", ticket.id); // Debug
-    console.log("Payment included:", ticket.payment ? "Yes" : "No"); // Debug
+
 
     return NextResponse.json({ success: true, ticket });
   } catch (err) {

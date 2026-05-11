@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 // Seed script for Heroku database
 const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcryptjs');

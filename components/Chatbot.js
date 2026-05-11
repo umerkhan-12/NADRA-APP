@@ -3,7 +3,6 @@ import { useState, useRef, useEffect } from "react";
 import { Send, X, MessageCircle, Globe, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function Chatbot() {
   const [isOpen, setIsOpen] = useState(false);
@@ -22,7 +21,7 @@ export default function Chatbot() {
           : "👋 السلام علیکم! میں نادرا اسسٹنٹ ہوں۔ آج میں آپ کی کیسے مدد کر سکتا ہوں؟";
       setMessages([{ sender: "bot", text: greeting }]);
     }
-  }, [isOpen]);
+  }, [isOpen, language, messages.length]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -30,10 +29,10 @@ export default function Chatbot() {
     }
   }, [messages]);
 
-  const handleSendMessage = async () => {
-    if (!inputMessage.trim()) return;
+  const handleSendMessage = async (directMessage) => {
+    const userMessage = (directMessage || inputMessage).trim();
+    if (!userMessage) return;
 
-    const userMessage = inputMessage.trim();
     setInputMessage("");
     setMessages((prev) => [...prev, { sender: "user", text: userMessage }]);
     setIsLoading(true);
@@ -59,6 +58,7 @@ export default function Chatbot() {
         throw new Error(data.error);
       }
     } catch (error) {
+      console.error("Chatbot error:", error);
       const errorMsg =
         language === "ur"
           ? "معذرت، کوئی خرابی ہوئی۔ براہ کرم دوبارہ کوشش کریں۔"
@@ -190,8 +190,7 @@ export default function Chatbot() {
                   <button
                     key={index}
                     onClick={() => {
-                      setInputMessage(question);
-                      setTimeout(() => handleSendMessage(), 100);
+                      handleSendMessage(question);
                     }}
                     className="text-xs px-3 py-1.5 bg-green-50 text-green-700 rounded-full hover:bg-green-100 transition-colors border border-green-200"
                     style={{ direction: language === "ur" ? "rtl" : "ltr" }}
@@ -209,7 +208,7 @@ export default function Chatbot() {
               <Input
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
-                onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+                onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
                 placeholder={
                   language === "en"
                     ? "Type your message..."

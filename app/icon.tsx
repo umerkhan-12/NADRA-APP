@@ -1,5 +1,4 @@
 import { ImageResponse } from 'next/og';
-import { Shield, CheckCircle } from 'lucide-react';
 
 export const runtime = 'edge';
 

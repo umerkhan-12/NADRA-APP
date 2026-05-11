@@ -24,7 +24,6 @@ import {
   CreditCard,
   Calendar,
   Zap,
-  RollerCoaster,
   Activity,
   TrendingUp,
   Upload,
@@ -46,7 +45,6 @@ export default function UserDashboard() {
   const [requiredDocuments, setRequiredDocuments] = useState([]);
   
   // Document upload states
-  const [selectedTicketId, setSelectedTicketId] = useState(null);
   const [uploadingFile, setUploadingFile] = useState(false);
   
   // Payment modal state
@@ -81,10 +79,7 @@ export default function UserDashboard() {
 
   // Fetch required documents when service is selected
   useEffect(() => {
-    if (!serviceId) {
-      setRequiredDocuments([]);
-      return;
-    }
+    if (!serviceId) return;
 
     fetch(`/api/services/${serviceId}/documents`)
       .then(res => res.json())
@@ -100,23 +95,27 @@ export default function UserDashboard() {
   useEffect(() => {
     if (status !== "authenticated" || !session?.user?.id) return;
 
-    const fetchTickets = () => {
-      setTicketsLoading(true);
+    const fetchTickets = (isBackground = false) => {
+      if (!isBackground) setTicketsLoading(true);
       fetch(`/api/tickets/user/${parseInt(session.user.id, 10)}`)
         .then(res => res.json())
         .then(data => {
           setTickets(data.tickets || []);
-          console.log("Fetched tickets from API:", data);  
         })
         .catch(console.error)
-        .finally(() => setTicketsLoading(false));
+        .finally(() => {
+          if (!isBackground) setTicketsLoading(false);
+        });
     };
 
     // Initial fetch
-    fetchTickets();
+    fetchTickets(false);
 
-    // Auto-refresh every 30 seconds to update queue positions
-    const interval = setInterval(fetchTickets, 30000);
+    // Auto-refresh every 60 seconds to update queue positions (Silent background sync)
+    const interval = setInterval(() => {
+      if (typeof document !== "undefined" && document.hidden) return;
+      fetchTickets(true);
+    }, 60000);
 
     return () => clearInterval(interval);
   }, [session, status]);
@@ -251,7 +250,7 @@ export default function UserDashboard() {
   };
 
   // Handle payment success
-  const handlePaymentSuccess = async (updatedPayment) => {
+  const handlePaymentSuccess = async () => {
     // Refresh tickets to show updated payment status
     const ticketsRes = await fetch(`/api/tickets/user/${parseInt(session.user.id, 10)}`);
     const ticketsData = await ticketsRes.json();
@@ -269,8 +268,19 @@ export default function UserDashboard() {
     router.push("/login");
   };
 
-  if (status === "loading" || ticketsLoading) return <p>Loading...</p>;
-  if (!session) return <p>Please log in to view your dashboard.</p>;
+  if (status === "loading" || ticketsLoading) return (
+    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-emerald-50 via-teal-50 to-green-50">
+      <div className="text-center">
+        <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-emerald-600 border-r-transparent mb-4"></div>
+        <p className="text-gray-600 font-medium">Loading your dashboard...</p>
+      </div>
+    </div>
+  );
+  if (!session) return (
+    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-emerald-50 via-teal-50 to-green-50">
+      <p className="text-gray-600">Please log in to view your dashboard.</p>
+    </div>
+  );
 
 
 // Your existing getStatusColor function
@@ -280,7 +290,7 @@ export default function UserDashboard() {
         return 'bg-green-100 text-green-700 border-green-300';
       case 'IN_PROGRESS':
         return 'bg-blue-100 text-blue-700 border-blue-300';
-      case 'PENDING':
+      case 'OPEN':
         return 'bg-yellow-100 text-yellow-700 border-yellow-300';
       default:
         return 'bg-gray-100 text-gray-700 border-gray-300';
@@ -293,7 +303,7 @@ export default function UserDashboard() {
         return <CheckCircle2 className="h-4 w-4" />;
       case 'IN_PROGRESS':
         return <Settings className="h-4 w-4" />;
-      case 'PENDING':
+      case 'OPEN':
         return <Clock className="h-4 w-4" />;
       default:
         return <AlertCircle className="h-4 w-4" />;
@@ -516,7 +526,11 @@ return (
                   id="service"
                   className="flex h-11 w-full rounded-lg border-2 border-input bg-background px-4 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 transition-all"
                   value={serviceId} 
-                  onChange={e => setServiceId(e.target.value)}
+                  onChange={e => {
+                    const value = e.target.value;
+                    setServiceId(value);
+                    if (!value) setRequiredDocuments([]);
+                  }}
                 >
                   <option value="">-- Choose a Service --</option>
                   {services.map(s => (
@@ -550,7 +564,7 @@ return (
                     <h3 className="font-semibold text-amber-900">Required Documents for This Service</h3>
                   </div>
                   <p className="text-sm text-amber-800 mb-3">
-                    📋 Please prepare these documents. You'll be able to upload them after creating the ticket.
+                    📋 Please prepare these documents. You&apos;ll be able to upload them after creating the ticket.
                   </p>
                   <div className="space-y-2">
                     {requiredDocuments.map((doc) => (
@@ -758,7 +772,7 @@ return (
                                 </div>
                                 <div>
                                   {t.queuePosition === 1 ? (
-                                    <p className="text-sm font-semibold text-green-600">🎉 You're next!</p>
+                                    <p className="text-sm font-semibold text-green-600">🎉 You&apos;re next!</p>
                                   ) : (
                                     <p className="text-sm text-gray-700">
                                       <strong>{t.queuePosition - 1}</strong> ticket(s) ahead

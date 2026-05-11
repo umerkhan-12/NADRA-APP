@@ -34,9 +34,16 @@ import Image from "next/image";
 import Chatbot from "@/components/Chatbot";
 import VisitorTracker from "@/components/VisitorTracker";
 
+type Service = {
+  id: number | string;
+  name: string;
+  description?: string;
+  fee?: number;
+};
+
 export default function Home() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [services, setServices] = useState([]);
+  const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -174,12 +181,12 @@ export default function Home() {
 
           {/* CTA Buttons */}
           <div className="hidden md:flex space-x-4">
-            <button className="px-4 py-2 rounded-lg hover:bg-gray-100 text-gray-700">
-              <Link href="/login">Login</Link>
-            </button>
-            <button className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg ">
-              <Link href="/register">Register</Link>
-            </button>
+            <Link href="/login" className="px-4 py-2 rounded-lg hover:bg-gray-100 text-gray-700">
+              Login
+            </Link>
+            <Link href="/register" className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg">
+              Register
+            </Link>
           </div>
 
           {/* Mobile Button */}
@@ -244,7 +251,7 @@ export default function Home() {
             </h1>
             <p className="text-gray-600 text-lg md:text-xl leading-relaxed">
               Access all NADRA services from anywhere. Apply for ID cards,
-              verify documents, and manage your digital identity securely with Pakistan's most trusted platform.
+              verify documents, and manage your digital identity securely with Pakistan&apos;s most trusted platform.
             </p>
             
             {/* Trust Indicators */}
@@ -355,7 +362,7 @@ export default function Home() {
             </div>
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {services.map((service: any, index: number) => {
+              {services.map((service, index: number) => {
                 const Icon = getServiceIcon(index);
                 const colorClass = getServiceColor(index);
                 return (
@@ -380,7 +387,7 @@ export default function Home() {
                       </p>
                       <div className="flex items-center justify-between pt-4 border-t border-gray-100">
                         <span className="text-sm font-semibold text-green-600">
-                          Fee: Rs. {service.fee.toLocaleString()}
+                          Fee: Rs. {(service.fee || 0).toLocaleString()}
                         </span>
                         <Link href="/register" className="text-sm text-green-600 hover:text-green-700 font-medium flex items-center gap-1 group-hover:gap-2 transition-all">
                           Apply Now
@@ -408,7 +415,7 @@ export default function Home() {
               Benefits of Digital Services
             </h2>
             <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-              Experience the convenience and security of Pakistan's premier digital identity platform
+              Experience the convenience and security of Pakistan&apos;s premier digital identity platform
             </p>
           </div>
 

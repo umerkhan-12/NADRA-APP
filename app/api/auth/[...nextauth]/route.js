@@ -43,7 +43,6 @@ export const authOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.username || !credentials?.password) {
-          console.log("❌ Agent login: Missing credentials");
           return null;
         }
 
@@ -52,22 +51,17 @@ export const authOptions = {
         });
 
         if (!agent) {
-          console.log("❌ Agent login: Agent not found with username:", credentials.username);
           return null;
         }
 
         if (!agent.password) {
-          console.log("❌ Agent login: No password set for agent");
           return null;
         }
 
         // Check password with bcrypt
         const isValid = await bcrypt.compare(credentials.password, agent.password);
-        console.log("🔐 Agent password check:", isValid ? "✅ Valid" : "❌ Invalid");
-        
         if (!isValid) return null;
 
-        console.log("✅ Agent login successful:", agent.name);
         return {
           id: agent.id.toString(),
           email: agent.email,

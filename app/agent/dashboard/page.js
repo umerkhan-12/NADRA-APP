@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,6 +19,7 @@ export default function AgentDashboard() {
   const [ticketsLoading, setTicketsLoading] = useState(true);
   const [selectedDelivery, setSelectedDelivery] = useState(null);
   const [showDeliveryModal, setShowDeliveryModal] = useState(false);
+  const isRefreshingRef = useRef(false);
 
   // Check authentication
   useEffect(() => {
@@ -55,42 +56,53 @@ export default function AgentDashboard() {
     fetchAgentInfo();
   }, [session, status]);
 
-  // Fetch assigned tickets
+  // Auto-refresh tickets without UI flicker
   useEffect(() => {
     if (status !== "authenticated" || !session?.user?.id) return;
 
-    setTicketsLoading(true);
-
-    fetch(`/api/agent/${session.user.id}/tickets`)
-      .then(res => res.json())
-      .then(data => setTickets(data.tickets || []))
-      .catch(console.error)
-      .finally(() => setTicketsLoading(false));
-  }, [session, status]);
-
-  // Auto-refresh tickets every 5 seconds WITHOUT UI flicker
-  useEffect(() => {
-    if (status !== "authenticated" || !session?.user?.id) return;
-
-    const interval = setInterval(async () => {
+    const fetchTickets = async (withLoading = false) => {
+      if (isRefreshingRef.current) return;
+      if (typeof document !== "undefined" && document.hidden) return;
+      isRefreshingRef.current = true;
+      if (withLoading) setTicketsLoading(true);
       try {
         const res = await fetch(`/api/agent/${session.user.id}/tickets`);
         const data = await res.json();
 
         setTickets(prev => {
           // If tickets changed, update them; otherwise keep same state
-          if (JSON.stringify(prev) !== JSON.stringify(data.tickets)) {
-            return data.tickets;
-        }
-        return prev;
-      });
+          const next = data.tickets || [];
+          if (JSON.stringify(prev) !== JSON.stringify(next)) {
+            return next;
+          }
+          return prev;
+        });
+      } catch (err) {
+        console.error("Auto-refresh error:", err);
+      } finally {
+        if (withLoading) setTicketsLoading(false);
+        isRefreshingRef.current = false;
+      }
+    };
 
-    } catch (err) {
-      console.error("Auto-refresh error:", err);
+    fetchTickets(true);
+
+    const interval = setInterval(() => fetchTickets(false), 15000);
+    const handleVisibility = () => {
+      if (!document.hidden) {
+        fetchTickets(false);
+      }
+    };
+    if (typeof document !== "undefined") {
+      document.addEventListener("visibilitychange", handleVisibility);
     }
-  }, 5000); // refresh every 5 sec
 
-  return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      if (typeof document !== "undefined") {
+        document.removeEventListener("visibilitychange", handleVisibility);
+      }
+    };
   }, [session, status]);
 
   const handleLogout = async () => {
@@ -147,7 +159,7 @@ export default function AgentDashboard() {
     switch (status) {
       case "COMPLETED": return "bg-green-100 text-green-700 border-green-300";
       case "IN_PROGRESS": return "bg-blue-100 text-blue-700 border-blue-300";
-      case "PENDING": return "bg-yellow-100 text-yellow-700 border-yellow-300";
+      case "OPEN": return "bg-yellow-100 text-yellow-700 border-yellow-300";
       default: return "bg-gray-100 text-gray-700 border-gray-300";
     }
   };
@@ -156,13 +168,24 @@ export default function AgentDashboard() {
     switch (status) {
       case "COMPLETED": return <CheckCircle2 className="h-4 w-4" />;
       case "IN_PROGRESS": return <Settings className="h-4 w-4" />;
-      case "PENDING": return <Clock className="h-4 w-4" />;
+      case "OPEN": return <Clock className="h-4 w-4" />;
       default: return <AlertCircle className="h-4 w-4" />;
     }
   };
 
-  if (status === "loading" || ticketsLoading) return <p>Loading dashboard...</p>;
-  if (!session) return <p>Redirecting to login...</p>;
+  if (status === "loading" || ticketsLoading) return (
+    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-cyan-900 via-blue-900 to-slate-900">
+      <div className="text-center">
+        <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-cyan-400 border-r-transparent mb-4"></div>
+        <p className="text-cyan-200 font-medium">Loading dashboard...</p>
+      </div>
+    </div>
+  );
+  if (!session) return (
+    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-cyan-900 via-blue-900 to-slate-900">
+      <p className="text-cyan-200">Redirecting to login...</p>
+    </div>
+  );
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen bg-linear-to-br from-cyan-900 via-blue-900 to-slate-900">
@@ -345,7 +368,7 @@ export default function AgentDashboard() {
                           {t.status !== "COMPLETED" && (
                             <Button size="sm" onClick={() => handleTicketUpdate(t.id, "COMPLETED")}>Mark Completed</Button>
                           )}
-                          {t.status === "PENDING" && (
+                          {t.status === "OPEN" && (
                             <Button size="sm" onClick={() => handleTicketUpdate(t.id, "IN_PROGRESS")}>Start Progress</Button>
                           )}
                         </div>

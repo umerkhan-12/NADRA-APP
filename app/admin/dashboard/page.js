@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import {
@@ -33,21 +33,27 @@ import {
   Plus,
   Activity,
   TrendingUp,
+  Gauge,
+  Database,
+  Cpu,
   Truck,
   File,
+  Zap,
 } from "lucide-react";
 
 export default function AdminDashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [users, setUsers] = useState([]);
+  const [stats, setStats] = useState(null);
   const [tickets, setTickets] = useState([]);
-  const [services, setServices] = useState([]);
   const [agents, setAgents] = useState([]);
-  const [payments, setPayments] = useState([]);
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [visitorStats, setVisitorStats] = useState(null);
+  const [optimizations, setOptimizations] = useState(null);
+  const [multithreadingResults, setMultithreadingResults] = useState(null);
+  const [runningMultithreading, setRunningMultithreading] = useState(false);
+  const isFetchingRef = useRef(false);
 
   // Agent creation state
   const [agentName, setAgentName] = useState("");
@@ -89,68 +95,93 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (status !== "authenticated" || !session?.user) return;
 
-    const fetchAllData = async () => {
+    const fetchAllData = async (force = false) => {
+      if (isFetchingRef.current) return;
+      if (!force && typeof document !== "undefined" && document.hidden) return;
+      isFetchingRef.current = true;
       try {
         const [
+          statsRes,
           ticketsRes,
-          usersRes,
-          servicesRes,
-          paymentsRes,
           logsRes,
           agentsRes,
           visitorRes,
+          optimizationsRes,
         ] = await Promise.all([
+          fetchJSON("/api/admin/stats"),
           fetchJSON("/api/admin/tickets"),
-          fetchJSON("/api/admin/users"),
-          fetchJSON("/api/admin/services"),
-          fetchJSON("/api/admin/payments"),
           fetchJSON("/api/admin/logs"),
           fetchJSON("/api/admin/agents"),
           fetchJSON("/api/visitor"),
+          fetchJSON("/api/admin/optimizations"),
         ]);
 
         if (JSON.stringify(tickets) !== JSON.stringify(ticketsRes?.tickets)) {
           setTickets(ticketsRes?.tickets || []);
         }
-        if (JSON.stringify(users) !== JSON.stringify(usersRes?.users)) {
-          setUsers(usersRes?.users || []);
-        }
-        if (
-          JSON.stringify(services) !== JSON.stringify(servicesRes?.services)
-        ) {
-          setServices(servicesRes?.services || []);
-        }
-        if (
-          JSON.stringify(payments) !== JSON.stringify(paymentsRes?.payments)
-        ) {
-          setPayments(paymentsRes?.payments || []);
-        }
-        if (JSON.stringify(logs) !== JSON.stringify(logsRes?.logs)) {
-          setLogs(logsRes?.logs || []);
-        }
-        if (JSON.stringify(agents) !== JSON.stringify(agentsRes?.agents)) {
-          setAgents(agentsRes?.agents || []);
-        }
-        if (JSON.stringify(visitorStats) !== JSON.stringify(visitorRes)) {
-          setVisitorStats(visitorRes);
-        }
+        setStats(statsRes?.stats || null);
+        setLogs(logsRes?.logs || []);
+        setAgents(agentsRes?.agents || []);
+        setVisitorStats(visitorRes || null);
+        setOptimizations(optimizationsRes || null);
       } catch (err) {
         console.error("Refresh failed:", err);
+      } finally {
+        isFetchingRef.current = false;
       }
     };
 
     (async () => {
-      await fetchAllData();
+      await fetchAllData(true);
       setLoading(false);
     })();
 
-    const interval = setInterval(fetchAllData, 3000);
-    return () => clearInterval(interval);
+    const interval = setInterval(() => fetchAllData(false), 60000);
+    const handleVisibility = () => {
+      if (!document.hidden) {
+        fetchAllData(true);
+      }
+    };
+    if (typeof document !== "undefined") {
+      document.addEventListener("visibilitychange", handleVisibility);
+    }
+    return () => {
+      clearInterval(interval);
+      if (typeof document !== "undefined") {
+        document.removeEventListener("visibilitychange", handleVisibility);
+      }
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session, status]); // FIXED ✔ ONLY session and status
 
   const handleLogout = async () => {
     await signOut({ redirect: false });
     router.push("/login");
+  };
+
+  const runMultithreadingDemo = async (mode) => {
+    setRunningMultithreading(true);
+    try {
+      const res = await fetch(`/api/admin/demo?mode=${mode}`);
+      const text = await res.text();
+      let data = {};
+      if (text) {
+        try {
+          data = JSON.parse(text);
+        } catch {
+          throw new Error(`Invalid response from demo API (HTTP ${res.status})`);
+        }
+      }
+      if (!res.ok) {
+        throw new Error(data?.error || `Demo API error (HTTP ${res.status})`);
+      }
+      setMultithreadingResults({ ...data, mode });
+    } catch (error) {
+      console.error("Error:", error);
+      alert("Error running demo: " + error.message);
+    } finally {
+      setRunningMultithreading(false);
+    }
   };
 
   // Create Agent
@@ -190,8 +221,19 @@ export default function AdminDashboard() {
     }
   };
 
-  if (status === "loading" || loading) return <p>Loading dashboard...</p>;
-  if (!session) return <p>Redirecting to login...</p>;
+  if (status === "loading" || loading) return (
+    <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="text-center">
+        <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-indigo-600 border-r-transparent mb-4"></div>
+        <p className="text-slate-600 font-medium">Loading dashboard...</p>
+      </div>
+    </div>
+  );
+  if (!session) return (
+    <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <p className="text-slate-600">Redirecting to login...</p>
+    </div>
+  );
 
 //   const handleDeleteAgent = async (agentId) => {
 //   if (!agentId) return alert("Agent ID missing");
@@ -241,15 +283,15 @@ export default function AdminDashboard() {
     }
   };
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-900 via-purple-900 to-slate-900">
+    <div className="min-h-screen bg-slate-50">
       <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
           <div>
-            <h1 className="text-3xl lg:text-4xl font-bold tracking-tight text-white">
+            <h1 className="text-3xl lg:text-4xl font-bold tracking-tight text-slate-900">
               NADRA Admin Dashboard
             </h1>
-            <p className="text-purple-200 mt-1">
+            <p className="text-slate-500 mt-1">
               Manage users, agents, and tickets
             </p>
           </div>
@@ -265,57 +307,57 @@ export default function AdminDashboard() {
 
         {/* Summary Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="bg-linear-to-br from-blue-500 to-blue-600 border-none text-white hover:shadow-2xl hover:scale-105 transition-all duration-300">
+          <Card className="bg-white border border-slate-200 text-slate-900 hover:shadow-md transition-all duration-300">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-semibold">Total Users</CardTitle>
-              <Users className="h-5 w-5 opacity-80" />
+              <CardTitle className="text-sm font-semibold text-slate-600">Total Users</CardTitle>
+              <Users className="h-5 w-5 text-blue-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{users.length}</div>
-              <p className="text-xs text-blue-100 mt-1 flex items-center">
-                <TrendingUp className="inline h-3 w-3 mr-1" />
+              <div className="text-3xl font-bold text-slate-900">{stats?.totalUsers || 0}</div>
+              <p className="text-xs text-slate-500 mt-1 flex items-center">
+                <TrendingUp className="inline h-3 w-3 mr-1 text-slate-400" />
                 Registered citizens
               </p>
             </CardContent>
           </Card>
 
-          <Card className="bg-linear-to-br from-purple-500 to-purple-600 border-none text-white hover:shadow-2xl hover:scale-105 transition-all duration-300">
+          <Card className="bg-white border border-slate-200 text-slate-900 hover:shadow-md transition-all duration-300">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-semibold">Total Tickets</CardTitle>
-              <Ticket className="h-5 w-5 opacity-80" />
+              <CardTitle className="text-sm font-semibold text-slate-600">Total Tickets</CardTitle>
+              <Ticket className="h-5 w-5 text-purple-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{tickets.length}</div>
-              <p className="text-xs text-purple-100 mt-1 flex items-center">
-                <Activity className="inline h-3 w-3 mr-1" />
+              <div className="text-3xl font-bold text-slate-900">{stats?.totalTickets || 0}</div>
+              <p className="text-xs text-slate-500 mt-1 flex items-center">
+                <Activity className="inline h-3 w-3 mr-1 text-slate-400" />
                 Service requests
               </p>
             </CardContent>
           </Card>
 
-          <Card className="bg-linear-to-br from-green-500 to-green-600 border-none text-white hover:shadow-2xl hover:scale-105 transition-all duration-300">
+          <Card className="bg-white border border-slate-200 text-slate-900 hover:shadow-md transition-all duration-300">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-semibold">Total Agents</CardTitle>
-              <UserCheck className="h-5 w-5 opacity-80" />
+              <CardTitle className="text-sm font-semibold text-slate-600">Total Agents</CardTitle>
+              <UserCheck className="h-5 w-5 text-emerald-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{agents.length}</div>
-              <p className="text-xs text-green-100 mt-1">
+              <div className="text-3xl font-bold text-slate-900">{stats?.totalAgents || 0}</div>
+              <p className="text-xs text-slate-500 mt-1">
                 Active support staff
               </p>
             </CardContent>
           </Card>
 
-          <Card className="bg-linear-to-br from-orange-500 to-orange-600 border-none text-white hover:shadow-2xl hover:scale-105 transition-all duration-300">
+          <Card className="bg-white border border-slate-200 text-slate-900 hover:shadow-md transition-all duration-300">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-semibold">Pending Payments</CardTitle>
-              <CreditCard className="h-5 w-5 opacity-80" />
+              <CardTitle className="text-sm font-semibold text-slate-600">Pending Payments</CardTitle>
+              <CreditCard className="h-5 w-5 text-amber-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">
-                {payments.filter((p) => p.status === "PENDING").length}
+              <div className="text-3xl font-bold text-slate-900">
+                {stats?.pendingPayments || 0}
               </div>
-              <p className="text-xs text-orange-100 mt-1">
+              <p className="text-xs text-slate-500 mt-1">
                 Awaiting confirmation
               </p>
             </CardContent>
@@ -325,60 +367,253 @@ export default function AdminDashboard() {
         {/* Visitor Statistics */}
         {visitorStats && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card className="bg-linear-to-br from-cyan-500 to-cyan-600 border-none text-white hover:shadow-2xl hover:scale-105 transition-all duration-300">
+            <Card className="bg-white border border-slate-200 text-slate-900 hover:shadow-md transition-all duration-300">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-semibold">Total Visitors</CardTitle>
-                <Users className="h-5 w-5 opacity-80" />
+                <CardTitle className="text-sm font-semibold text-slate-600">Total Visitors</CardTitle>
+                <Users className="h-5 w-5 text-indigo-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold">{visitorStats.totalVisitors || 0}</div>
-                <p className="text-xs text-cyan-100 mt-1">All time visits</p>
+                <div className="text-3xl font-bold text-slate-900">{visitorStats.totalVisitors || 0}</div>
+                <p className="text-xs text-slate-500 mt-1">All time visits</p>
               </CardContent>
             </Card>
 
-            <Card className="bg-linear-to-br from-teal-500 to-teal-600 border-none text-white hover:shadow-2xl hover:scale-105 transition-all duration-300">
+            <Card className="bg-white border border-slate-200 text-slate-900 hover:shadow-md transition-all duration-300">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-semibold">Unique Visitors</CardTitle>
-                <UserCheck className="h-5 w-5 opacity-80" />
+                <CardTitle className="text-sm font-semibold text-slate-600">Unique Visitors</CardTitle>
+                <UserCheck className="h-5 w-5 text-teal-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold">{visitorStats.uniqueVisitors || 0}</div>
-                <p className="text-xs text-teal-100 mt-1">Unique IP addresses</p>
+                <div className="text-3xl font-bold text-slate-900">{visitorStats.uniqueVisitors || 0}</div>
+                <p className="text-xs text-slate-500 mt-1">Unique IP addresses</p>
               </CardContent>
             </Card>
 
-            <Card className="bg-linear-to-br from-pink-500 to-pink-600 border-none text-white hover:shadow-2xl hover:scale-105 transition-all duration-300">
+            <Card className="bg-white border border-slate-200 text-slate-900 hover:shadow-md transition-all duration-300">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-semibold">Today's Visitors</CardTitle>
-                <Activity className="h-5 w-5 opacity-80" />
+                <CardTitle className="text-sm font-semibold text-slate-600">Today&apos;s Visitors</CardTitle>
+                <Activity className="h-5 w-5 text-rose-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold">{visitorStats.todayVisitors || 0}</div>
-                <p className="text-xs text-pink-100 mt-1">Visits today</p>
+                <div className="text-3xl font-bold text-slate-900">{visitorStats.todayVisitors || 0}</div>
+                <p className="text-xs text-slate-500 mt-1">Visits today</p>
               </CardContent>
             </Card>
 
-            <Card className="bg-linear-to-br from-indigo-500 to-indigo-600 border-none text-white hover:shadow-2xl hover:scale-105 transition-all duration-300">
+            <Card className="bg-white border border-slate-200 text-slate-900 hover:shadow-md transition-all duration-300">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-semibold">This Week</CardTitle>
-                <TrendingUp className="h-5 w-5 opacity-80" />
+                <CardTitle className="text-sm font-semibold text-slate-600">This Week</CardTitle>
+                <TrendingUp className="h-5 w-5 text-blue-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold">{visitorStats.weekVisitors || 0}</div>
-                <p className="text-xs text-indigo-100 mt-1">Last 7 days</p>
+                <div className="text-3xl font-bold text-slate-900">{visitorStats.weekVisitors || 0}</div>
+                <p className="text-xs text-slate-500 mt-1">Last 7 days</p>
               </CardContent>
             </Card>
           </div>
         )}
 
+        {/* Performance Optimization Dashboard */}
+        {optimizations && (
+          <Card className="bg-white border shadow-sm transition-shadow">
+            <CardHeader className="bg-slate-50/50 border-b border-slate-100">
+              <CardTitle className="flex items-center gap-2 text-slate-900">
+                <Gauge className="h-5 w-5 text-indigo-600" />
+                Performance Optimization
+              </CardTitle>
+              <CardDescription className="text-slate-500">
+                Live status of optimization features and benchmarks
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {!optimizations.success && (
+                <div className="mb-4 rounded border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                  {optimizations.error ||
+                    "Optimization stats unavailable. Check /api/admin/optimizations."}
+                </div>
+              )}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div className="rounded-lg border p-4 bg-white">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                      <Activity className="h-4 w-4 text-purple-600" />
+                      Async Email Queue
+                    </div>
+                    <Badge
+                      variant={
+                        optimizations.queue?.available
+                          ? "default"
+                          : optimizations.queue?.enabled
+                            ? "destructive"
+                            : "secondary"
+                      }
+                    >
+                      {optimizations.queue?.available
+                        ? "Connected"
+                        : optimizations.queue?.enabled
+                          ? "Offline"
+                          : "Disabled"}
+                    </Badge>
+                  </div>
+                  <div className="mt-3 grid grid-cols-2 gap-2 text-sm text-slate-600">
+                    <div>Waiting: {optimizations.queue?.jobs?.waiting ?? "-"}</div>
+                    <div>Active: {optimizations.queue?.jobs?.active ?? "-"}</div>
+                    <div>Completed: {optimizations.queue?.jobs?.completed ?? "-"}</div>
+                    <div>Failed: {optimizations.queue?.jobs?.failed ?? "-"}</div>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-2">
+                    {optimizations.queue?.message ||
+                      optimizations.queue?.error ||
+                      "Queue running normally."}
+                  </p>
+                </div>
+
+                <div className="rounded-lg border p-4 bg-white">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                      <Database className="h-4 w-4 text-blue-600" />
+                      Index Analysis
+                    </div>
+                    <Badge variant={optimizations.indexes?.available ? "default" : "secondary"}>
+                      {optimizations.indexes?.available ? "Ready" : "Not Run"}
+                    </Badge>
+                  </div>
+                  {optimizations.indexes?.available ? (
+                    <div className="mt-3 grid grid-cols-2 gap-2 text-sm text-slate-600">
+                      <div>Tables: {optimizations.indexes?.totals?.tables ?? "-"}</div>
+                      <div>Indexes: {optimizations.indexes?.totals?.indexes ?? "-"}</div>
+                      <div>Unused: {optimizations.indexes?.totals?.unusedIndexes ?? "-"}</div>
+                      <div>Missing: {optimizations.indexes?.totals?.missingIndexes ?? "-"}</div>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-slate-500 mt-3">
+                      {optimizations.indexes?.message}
+                    </p>
+                  )}
+                  {optimizations.indexes?.generatedAt && (
+                    <p className="text-xs text-slate-500 mt-2">
+                      Last run: {new Date(optimizations.indexes.generatedAt).toLocaleString()}
+                    </p>
+                  )}
+                </div>
+
+                <div className="rounded-lg border p-4 bg-white">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                      <TrendingUp className="h-4 w-4 text-green-600" />
+                      Query Benchmarking
+                    </div>
+                    <Badge variant={optimizations.benchmarks?.available ? "default" : "secondary"}>
+                      {optimizations.benchmarks?.available ? "Ready" : "Not Run"}
+                    </Badge>
+                  </div>
+                  {optimizations.benchmarks?.available ? (
+                    <div className="mt-3 space-y-1 text-sm text-slate-600">
+                      <div>
+                        Avg latency: {optimizations.benchmarks?.summary?.averageAvg ?? "-"}ms
+                      </div>
+                      <div>
+                        Fastest: {optimizations.benchmarks?.summary?.fastest?.label ?? "-"}
+                      </div>
+                      <div>
+                        Slowest: {optimizations.benchmarks?.summary?.slowest?.label ?? "-"}
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-slate-500 mt-3">
+                      {optimizations.benchmarks?.message}
+                    </p>
+                  )}
+                  {optimizations.benchmarks?.generatedAt && (
+                    <p className="text-xs text-slate-500 mt-2">
+                      Last run:{" "}
+                      {new Date(optimizations.benchmarks.generatedAt).toLocaleString()}
+                    </p>
+                  )}
+                </div>
+
+                <div className="rounded-lg border p-4 bg-white">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                      <Cpu className="h-4 w-4 text-orange-600" />
+                      Worker Threads
+                    </div>
+                    <Badge variant="default">Enabled</Badge>
+                  </div>
+                  <div className="mt-3 text-sm text-slate-600">
+                    Pool size: {optimizations.workers?.poolSize ?? 4} workers
+                  </div>
+                  <p className="text-xs text-slate-500 mt-2">
+                    {optimizations.workers?.note ||
+                      "CPU-heavy tasks run in parallel without blocking."}
+                  </p>
+                </div>
+
+                <div className="rounded-lg border p-4 bg-gradient-to-br from-yellow-50 to-orange-50">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                      <Zap className="h-4 w-4 text-yellow-600" />
+                      Multithreading Demo
+                    </div>
+                    <Badge variant="outline">Interactive</Badge>
+                  </div>
+                  <div className="mt-3 flex gap-2">
+                    <Button
+                      onClick={() => runMultithreadingDemo("sequential")}
+                      disabled={runningMultithreading}
+                      variant="outline"
+                      size="sm"
+                      className="text-red-600 border-red-200 hover:bg-red-50"
+                    >
+                      {runningMultithreading ? "Running..." : "Sequential"}
+                    </Button>
+                    <Button
+                      onClick={() => runMultithreadingDemo("parallel")}
+                      disabled={runningMultithreading}
+                      size="sm"
+                      className="bg-green-600 hover:bg-green-700 text-white"
+                    >
+                      {runningMultithreading ? "Running..." : "Parallel (4x)"}
+                    </Button>
+                  </div>
+                  {multithreadingResults && (
+                    <div
+                      className={`mt-3 rounded p-2 text-xs font-semibold ${
+                        multithreadingResults.mode === "sequential"
+                          ? "bg-red-100 text-red-800"
+                          : "bg-green-100 text-green-800"
+                      }`}
+                    >
+                      {multithreadingResults.duration} •{" "}
+                      {multithreadingResults.mode === "sequential"
+                        ? "BLOCKING"
+                        : "NON-BLOCKING"}
+                      {multithreadingResults.info && (
+                        <div className="mt-1 font-normal text-slate-700">
+                          {multithreadingResults.info}
+                        </div>
+                      )}
+                      {multithreadingResults.speedup && (
+                        <div className="mt-1 text-yellow-700">
+                          ⚡ {multithreadingResults.speedup}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Create Agent Form */}
-        <Card className="bg-white/95 backdrop-blur border-purple-200 shadow-xl hover:shadow-2xl transition-shadow">
-          <CardHeader className="bg-linear-to-br from-purple-50 to-blue-50">
-            <CardTitle className="flex items-center gap-2 text-purple-900">
-              <Plus className="h-5 w-5" />
+        <Card className="bg-white border shadow-sm transition-shadow">
+          <CardHeader className="bg-slate-50/50 border-b border-slate-100">
+            <CardTitle className="flex items-center gap-2 text-slate-900">
+              <Plus className="h-5 w-5 text-indigo-600" />
               Create New Agent
             </CardTitle>
-            <CardDescription className="text-purple-700">
+            <CardDescription className="text-slate-500">
               Add a new support agent to the system
             </CardDescription>
           </CardHeader>

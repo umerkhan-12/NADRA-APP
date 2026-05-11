@@ -28,7 +28,7 @@ export default function DashboardChatbot({ userId, userName }) {
         },
       ]);
     }
-  }, [isOpen, userName]);
+  }, [isOpen, userName, messages.length]);
 
   const sendMessage = async () => {
     if (!input.trim()) return;
