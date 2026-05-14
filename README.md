@@ -60,6 +60,7 @@ A **production-ready**, full-stack **NADRA service management platform** featuri
 
 ## 📖 Table of Contents
 
+- [Learning Resources](#-learning-resources)
 - [Features Overview](#-features-overview)
 - [System Architecture](#-system-architecture)
 - [Database Design](#-database-design)
@@ -72,6 +73,42 @@ A **production-ready**, full-stack **NADRA service management platform** featuri
 - [Performance Guide (NEW!)](#-performance-guide-new) 
 - [Contributing](#-contributing)
 - [License](#-license)
+
+---
+
+## 📚 Learning Resources
+
+### React useState Hook Learning Guides
+
+New to React hooks or want to understand `useState` better? We've created comprehensive learning materials with examples directly from this project!
+
+📚 **[Learning Resources Index](./LEARNING_RESOURCES_INDEX.md)** - Start here! Complete guide to all learning materials
+
+📖 **[Complete useState Learning Guide](./USESTATE_LEARNING_GUIDE.md)**
+- Basic to advanced `useState` patterns
+- Examples with different data types (strings, numbers, arrays, objects)
+- Functional updates and best practices
+- React 19 specific features and updates
+- Common patterns used in this project
+
+🎯 **[Practical useState Examples](./USESTATE_PRACTICAL_EXAMPLES.md)**
+- Ready-to-use, copy-paste examples
+- Counter components
+- Form handling (simple and complex)
+- Todo list application
+- Modal management
+- API data fetching with loading states
+- Multi-step forms
+- Search and filter functionality
+- Tab navigation
+
+⚡ **[Quick Reference Card](./USESTATE_QUICK_REFERENCE.md)**
+- Handy cheat sheet for quick lookup
+- Common patterns and syntax
+- Do's and don'ts
+- When to use functional updates
+
+All examples are taken from real components in this NADRA-APP project using **React 19.2.0**!
 
 ---
 
