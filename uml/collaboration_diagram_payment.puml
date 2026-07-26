@@ -1,0 +1,30 @@
+@startuml Collaboration_Diagram_Payment
+
+title NADRA Citizen Portal - Collaboration Diagram\nPayment Processing Use Case
+
+object "Citizen" as Citizen #LightGreen
+object "PaymentForm" as Form #FFCDD2
+object "PaymentController" as PC #FFE082
+object "Payment" as Payment #C8E6C9
+object "Ticket" as Ticket #C8E6C9
+object "Database" as DB #E1BEE7
+object "PaymentGateway" as PG #BBDEFB
+object "EmailService" as Email #BBDEFB
+
+Citizen --> Form : 1: selectPayment()
+Form --> PC : 1.1: getPaymentInfo()
+PC --> Payment : 1.2: findByTicket()
+Payment --> DB : 1.3: query()
+Citizen --> Form : 2: enterCardDetails()
+Form --> PC : 2.1: processPayment()
+PC --> PC : 2.2: checkIdempotency()
+PC --> PC : 2.3: validateCard()
+PC --> PG : 3: chargeCard()
+PG --> PC : 3.1: transactionId()
+PC --> Payment : 4: updateStatus()
+Payment --> DB : 4.1: update()
+PC --> Email : 4.2: sendConfirmation()
+PC --> Form : 5: paymentSuccess()
+Form --> Citizen : 5.1: displayReceipt()
+
+@enduml

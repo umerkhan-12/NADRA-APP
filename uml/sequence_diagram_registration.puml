@@ -1,0 +1,87 @@
+@startuml Sequence_Diagram_Registration
+
+title NADRA Citizen Portal - Sequence Diagram\nUser Registration Use Case
+
+actor Citizen
+boundary "RegistrationForm" as Form
+control "AuthController" as Auth
+entity "User" as User
+entity "OTP" as OTP
+participant "EmailService" as Email
+database "Database" as DB
+
+== Registration Form ==
+
+Citizen -> Form : accessRegistrationPage()
+Form -> Citizen : displayForm()
+
+Citizen -> Form : enterDetails(name, email, phone, cnic, password)
+Form -> Auth : validateInput(userData)
+Auth -> Auth : checkFieldFormats()
+Auth --> Form : validationResult
+
+alt Invalid Input
+    Form -> Citizen : showValidationErrors()
+end
+
+== Email Verification ==
+
+Form -> Auth : submitRegistration(userData)
+Auth -> DB : findUser(email)
+DB --> Auth : existingUser | null
+
+alt Email Already Exists
+    Auth --> Form : 409 Conflict
+    Form -> Citizen : showEmailExistsError()
+else Email Available
+    Auth -> Auth : checkRateLimit(email)
+    
+    alt Rate Limit Exceeded
+        Auth --> Form : 429 Too Many Requests
+        Form -> Citizen : showRateLimitError()
+    else Within Limit
+        Auth -> Auth : generateOTP()
+        Auth -> OTP : create(email, code, expiry)
+        OTP -> DB : insert()
+        DB --> OTP : otpId
+        
+        Auth ->> Email : sendOTPEmail(email, code)
+        Email --> Auth : emailSent
+        
+        Auth --> Form : OTP Sent
+        Form -> Citizen : displayOTPInput()
+    end
+end
+
+== OTP Verification ==
+
+Citizen -> Form : enterOTP(code)
+Form -> Auth : verifyOTP(email, code)
+Auth -> OTP : find(email, code)
+OTP -> DB : query()
+DB --> OTP : otpRecord
+
+alt OTP Invalid or Expired
+    Auth -> OTP : incrementAttempts()
+    
+    alt Max Attempts Reached
+        Auth --> Form : Account Locked
+        Form -> Citizen : showLockedError()
+    else Attempts Remaining
+        Auth --> Form : Invalid OTP
+        Form -> Citizen : showInvalidOTP()
+    end
+else OTP Valid
+    Auth -> Auth : hashPassword(password)
+    Auth -> User : create(userData)
+    User -> DB : insert()
+    DB --> User : userId
+    
+    Auth -> OTP : markVerified()
+    Auth -> DB : createSession(userId)
+    
+    Auth --> Form : Registration Success
+    Form -> Citizen : redirectToDashboard()
+end
+
+@enduml

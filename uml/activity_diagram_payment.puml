@@ -1,0 +1,77 @@
+@startuml Activity_Diagram_Payment
+
+title NADRA Citizen Portal - Activity Diagram\nPayment Processing
+
+|Citizen|
+start
+:View Ticket Details;
+:Click Pay Now;
+
+|System|
+:Load Payment Options;
+:Display Payment Methods;
+
+|Citizen|
+:Select Payment Method;
+
+if (Online Payment?) then (yes)
+    :Enter Card Details;
+    note right
+      - Card Number (16 digits)
+      - CVV (3 digits)
+      - Expiry Date
+    end note
+    
+    |System|
+    :Validate Card Format;
+    
+    if (Card Format Valid?) then (yes)
+        :Check Idempotency;
+        
+        if (Already Paid?) then (yes)
+            |Citizen|
+            :Show "Already Paid" Message;
+            :View Receipt;
+        else (no)
+            |Payment Gateway|
+            :Process Card Payment;
+            
+            if (Payment Successful?) then (yes)
+                |System|
+                :Generate Transaction ID;
+                :Update Payment Status;
+                :Set Payment Timestamp;
+                :Send Confirmation Email;
+                
+                |Citizen|
+                :Payment Success;
+                :View/Download Receipt;
+            else (no)
+                |Citizen|
+                :Payment Failed;
+                :Retry or Change Method;
+            endif
+        endif
+    else (no)
+        |Citizen|
+        :Show Card Validation Error;
+        :Re-enter Card Details;
+    endif
+    
+else (Cash on Delivery)
+    |System|
+    :Set Payment Method = COD;
+    :Keep Status = PENDING;
+    :Update Ticket;
+    
+    |Citizen|
+    :COD Selected;
+    note right
+      Payment collected
+      on delivery
+    end note
+endif
+
+stop
+
+@enduml

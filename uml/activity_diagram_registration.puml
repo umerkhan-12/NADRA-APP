@@ -1,0 +1,79 @@
+@startuml Activity_Diagram_Registration
+
+title NADRA Citizen Portal - Activity Diagram\nUser Registration Process
+
+|Citizen|
+start
+:Access Registration Page;
+:Enter Personal Details;
+note right
+  - Name
+  - Email
+  - Phone
+  - CNIC
+  - Password
+end note
+
+|System|
+:Validate Input Fields;
+
+if (Valid Input?) then (yes)
+    :Check Email Exists;
+    
+    if (Email Already Registered?) then (yes)
+        |Citizen|
+        :Show Error Message;
+        :Re-enter Email;
+        |System|
+    else (no)
+        :Check Rate Limit;
+        
+        if (Rate Limit Exceeded?) then (yes)
+            |Citizen|
+            :Show "Try Again Later";
+            stop
+        else (no)
+            :Generate 6-Digit OTP;
+            :Store OTP with 10min Expiry;
+            :Send OTP via Email;
+            
+            |Citizen|
+            :Receive OTP Email;
+            :Enter OTP Code;
+            
+            |System|
+            :Verify OTP;
+            
+            if (OTP Valid?) then (yes)
+                :Hash Password (bcrypt);
+                :Create User Account;
+                :Mark OTP as Verified;
+                :Create Session;
+                
+                |Citizen|
+                :Registration Successful;
+                :Redirect to Dashboard;
+            else (no)
+                :Increment Attempt Counter;
+                
+                if (Max Attempts Reached?) then (yes)
+                    |Citizen|
+                    :Account Locked;
+                    :Request New OTP;
+                else (no)
+                    |Citizen|
+                    :Show Invalid OTP;
+                    :Re-enter OTP;
+                endif
+            endif
+        endif
+    endif
+else (no)
+    |Citizen|
+    :Show Validation Errors;
+    :Correct Input Fields;
+endif
+
+stop
+
+@enduml
